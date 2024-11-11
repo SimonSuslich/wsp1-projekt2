@@ -24,13 +24,23 @@ body {
   background-color: var(--bg-color1);
 }
 
-.all-to-do-container {
+.to-do-container {
   display: grid;
   grid-template-columns: 50% 50%;
   gap: 1rem;
   row-gap: 2rem;
   padding: 2rem;
+  /* text-align: center; */
+}
+
+h1,
+h2 {
   text-align: center;
+}
+
+.all-to-dos-container {
+  display: grid;
+  gap: 2rem;
 }
 
 .place-new-to-dos-container,
@@ -51,9 +61,13 @@ body {
   height: min-content;
 }
 
-ul {
-  text-align: start;
-  place-self: center;
+.to-do-info {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.to-do-card .date-info {
+  text-align: end;
 }
 
 .buttons {
