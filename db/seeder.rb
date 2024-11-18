@@ -30,9 +30,9 @@ class Seeder
                 title TEXT NOT NULL,
                 description TEXT,
                 category TEXT,
-                due_date DATETIME,
-                post_date DATETIME,
-                status_complete BOOL)')
+                due_date DATE,
+                post_date DATE,
+                status_complete INTEGER DEFAULT 0)')
   end
 
   def self.populate_tables

@@ -31,10 +31,21 @@ class App < Sinatra::Base
         description = params['description']
         category = params['category']
         due_date = params['due_date']
-        
-        db.execute("INSERT INTO todos (title, description, category, due_date, post_date) VALUES(?,?,?,?,?)", [title, description, category, due_date, "CURRENT_TIMESTAMP"])
+        db.execute("INSERT INTO todos (title, description, category, due_date, post_date) VALUES(?,?,?,?, DATE('now'))", [title, description, category, due_date])
         redirect("/")
 
+    end
+
+    post '/todos/:id/delete' do | id |
+        db.execute('DELETE FROM todos WHERE id = ?', id)
+        redirect("/todos")        
+    end
+
+    post '/todos/:id/updatestatus' do |id|
+        status_complete = db.execute('SELECT status_complete FROM todos WHERE id = ?', id).first.first.last
+        status_complete == 1 ? status_complete = 0 : status_complete = 1
+        db.execute("UPDATE todos SET status_complete=? WHERE id=?", [status_complete, id])
+        redirect("/")
     end
 
     # # Övning no. 2.1
@@ -59,32 +70,29 @@ class App < Sinatra::Base
     #     erb(:"fruits/show")
     # end
 
-    # post '/fruits/:id/delete' do | id |
-    #     #todo: ta bort frukten med idt
-    #     db.execute('DELETE FROM fruits WHERE id = ?', id)
-    #     redirect("/fruits")        
-    # end
 
 
 
 
-    # get '/fruits/:id/edit' do |id|
-    #     @fruit = db.execute('SELECT * FROM fruits WHERE id=?', id).first
-    #     erb(:"fruits/edit")
-    # end
+
+    get '/todos/:id/edit' do |id|
+        @todo = db.execute('SELECT * FROM todos WHERE id=?', id).first
+        erb(:"edit")
+    end
         
 
-    # post '/fruits/:id/update' do |id|
+    post '/todos/:id/update' do |id|
 
+        title = params['title']
+        description = params['description']
+        category = params['category']
+        due_date = params['due_date']
 
-    #     name = params['name']
-    #     tastiness = params['tastiness']
-    #     description = params['description']
         
-    #     db.execute("UPDATE fruits SET name=?, description=?, tastiness=? WHERE id=?", [[name, tastiness, description], id])
-    #     redirect("/fruits")
+        db.execute("UPDATE todos SET title=?, description=?, category=?, due_date=?, post_date=DATE('now') WHERE id=?", [[title, description, category, due_date], id])
+        redirect("/")
 
-    # end
+    end
 
 
 
