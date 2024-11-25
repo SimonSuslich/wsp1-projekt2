@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
   --bg-color1: #f1f1f1;
   --bg-color2: #dfdfdf;
@@ -9,6 +11,8 @@
   scroll-behavior: smooth;
   padding: 0;
   margin: 0;
+
+  font-family: "Montserrat", sans-serif;
 
 }
 
@@ -25,11 +29,11 @@ body {
 }
 
 .to-do-container {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  gap: 1rem;
-  row-gap: 2rem;
+  display: flex;
+  justify-content: space-between;
   padding: 2rem;
+  gap: 2rem;
+  align-items: flex-start;
   /* text-align: center; */
 }
 
@@ -41,7 +45,16 @@ h2 {
 .all-to-dos-container {
   display: grid;
   gap: 2rem;
+
 }
+
+.place-new-to-dos-container,
+.all-to-dos-container,
+.update-to-dos-container {
+  width: 50%;
+  box-sizing: border-box;
+}
+
 
 .place-new-to-dos-container,
 .to-do-card {
@@ -93,17 +106,21 @@ h2 {
   color: var(--main-color);
 }
 
-.place-new-to-dos-container {
+.place-new-to-dos-container,
+.update-to-dos-container {
   padding: 2rem;
   display: grid;
 }
 
-.place-new-to-dos-container form {
+.place-new-to-dos-container form,
+.update-to-dos-container form {
   display: grid;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.place-new-to-dos-container label {
+.place-new-to-dos-container label,
+.update-to-dos-container label {
   text-align: start;
   display: grid;
   gap: 0.25rem;
@@ -114,4 +131,10 @@ h2 {
 .non-active-to-dos-container {
   display: grid;
   gap: 1rem;
+}
+
+textarea {
+  resize: vertical;
+  font-family: "Montserrat", sans-serif;
+
 }

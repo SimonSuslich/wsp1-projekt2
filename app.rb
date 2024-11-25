@@ -29,9 +29,9 @@ class App < Sinatra::Base
     post '/todos' do 
         title = params['title']
         description = params['description']
-        category = params['category']
+        # category = params['category']
         due_date = params['due_date']
-        db.execute("INSERT INTO todos (title, description, category, due_date, post_date) VALUES(?,?,?,?, DATE('now'))", [title, description, category, due_date])
+        db.execute("INSERT INTO todos (title, description, due_date, post_date) VALUES(?,?,?, DATE('now'))", [title, description, due_date])
         redirect("/")
 
     end
@@ -85,11 +85,11 @@ class App < Sinatra::Base
 
         title = params['title']
         description = params['description']
-        category = params['category']
+        # category = params['category']
         due_date = params['due_date']
 
         
-        db.execute("UPDATE todos SET title=?, description=?, category=?, due_date=?, post_date=DATE('now') WHERE id=?", [[title, description, category, due_date], id])
+        db.execute("UPDATE todos SET title=?, description=?, due_date=?, post_date=DATE('now') WHERE id=?", [[title, description, due_date], id])
         redirect("/")
 
     end

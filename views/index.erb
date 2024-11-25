@@ -1,109 +1,109 @@
 <section class="to-do-container">
 
-        <div class="all-to-dos-container">        
-            
-            <div class="active-to-dos-container">
-                <h2>ToDo's to do</h2>
+    <div class="all-to-dos-container">        
+        
+        <div class="active-to-dos-container">
+            <h2>ToDo's to do</h2>
 
 
-                <div class="to-do-card-container">
-                    <%if @not_completed_todos%>
+            <div class="to-do-card-container">
+                <%if @not_completed_todos%>
 
-                        <%@not_completed_todos.each do |element|%>
-                            <div class="to-do-card">
-                                <div class="to-do-info">
-                                    <div class="">
-                                        <h3><%= element['title'] %></h3>
-                                        <h4><%= element['category'] %></h4>
-                                    </div>
-                                    <div class="date-info">
-                                        <p>Due date: <%= element['due_date']%></p>
-                                        <p>Post date: <%= element['post_date']%></p>
-                                    </div>
+                    <%@not_completed_todos.each do |element|%>
+                        <div class="to-do-card">
+                            <div class="to-do-info">
+                                <div class="">
+                                    <h3><%= element['title'] %></h3>
                                     
                                 </div>
-                                <p class="description"><%= element['description']%></p>
-                                <div class="buttons">
-                                    <form action="/todos/<%=element["id"]%>/delete" method="POST">
-                                        <input type="submit" value="Ta bort" class="button-classic">
-                                    </form>
-                                    <form action="/todos/<%= element['id']%>/updatestatus" method="POST">
-                                        <input type="submit" value="Färdig"
-                                        name="status_complete" class="button-classic">
-                                    </form>
-                                    <form action="/todos/<%= element['id']%>/edit" method="GET">
-                                        <input type="submit" value="Ändra" class="button-hollow">
-                                    </form>
+                                <div class="date-info">
+                                    <p>Due date: <%= element['due_date']%></p>
+                                    <p>Post date: <%= element['post_date']%></p>
                                 </div>
+                                
                             </div>
-                        <%end%>
+                            <p class="description"><%= element['description']%></p>
+                            <div class="buttons">
+                                <form action="/todos/<%=element["id"]%>/delete" method="POST">
+                                    <input type="submit" value="Ta bort" class="button-classic">
+                                </form>
+                                <form action="/todos/<%= element['id']%>/updatestatus" method="POST">
+                                    <input type="submit" value="Färdig"
+                                    name="status_complete" class="button-classic">
+                                </form>
+                                <form action="/todos/<%= element['id']%>/edit" method="GET">
+                                    <input type="submit" value="Ändra" class="button-hollow">
+                                </form>
+                            </div>
+                        </div>
                     <%end%>
-
-                </div>
+                <%end%>
 
             </div>
 
-
-            <div class="non-active-to-dos-container">
-                <h2>Färdiga ToDo's</h2>
-
-
-                <div class="to-do-card-container">
-
-                    <%if @completed_todos%>
-
-                        <%@completed_todos.each do |element|%>
-                            <div class="to-do-card">
-                                <div class="to-do-info">
-                                    <div class="">
-                                        <h3><%= element['title'] %></h3>
-                                        <h4><%= element['category'] %></h4>
-                                    </div>
-                                    <div class="date-info">
-                                        <p>Due date: <%= element['due_date']%></p>
-                                        <p>Post date: <%= element['post_date']%></p>
-                                    </div>
-                                    
-                                </div>
-                                <p class="description"><%= element['description']%></p>
-                                <div class="buttons">
-                                    <form action="/todos/<%=element["id"]%>/delete" method="POST">
-                                        <input type="submit" value="Ta bort" class="button-classic">
-                                    </form>
-                                    <form action="/todos/<%= element['id']%>/updatestatus" method="POST">
-                                        <input type="submit" value="Inte färdig"
-                                        name="status_complete" class="button-classic">
-                                    </form>
-                                    <form action="/todos/<%= element['id']%>/edit" method="GET">
-                                        <input type="submit" value="Ändra" class="button-hollow">
-                                    </form>
-                                </div>
-                            </div>
-                        <%end%>
-                    <%end%>
-                </div>
-            </div>
-
-        </div>        
-
-        <div class="place-new-to-dos-container">
-            <h2>Ny ToDo</h2>
-            <form action="/todos" method="post">
-                <label>Titel <input type="text" name="title"></label>
-                <label>Beskrivning</label>
-                <textarea name="description" rows="5"></textarea>
-                <label for="option">Kategori</label>
-                <select id="kategori" name="category">
-                    <option value="kategori1">kategori 1</option>
-                    <option value="kategori2">kategori 2</option>
-                    <option value="kategori3">kategori 3</option>
-                </select>
-                <label for="due-date">Due date</label>
-                <input type="date" id="due-date" name="due_date">
-                <input type="submit" value="Spara" class="button-classic">
-            </form>
         </div>
 
-    
 
-    </section>
+        <div class="non-active-to-dos-container">
+            <h2>Färdiga ToDo's</h2>
+
+
+            <div class="to-do-card-container">
+
+                <%if @completed_todos%>
+
+                    <%@completed_todos.each do |element|%>
+                        <div class="to-do-card">
+                            <div class="to-do-info">
+                                <div class="">
+                                    <h3><%= element['title'] %></h3>
+                                    
+                                </div>
+                                <div class="date-info">
+                                    <p>Due date: <%= element['due_date']%></p>
+                                    <p>Post date: <%= element['post_date']%></p>
+                                </div>
+                                
+                            </div>
+                            <p class="description"><%= element['description']%></p>
+                            <div class="buttons">
+                                <form action="/todos/<%=element["id"]%>/delete" method="POST">
+                                    <input type="submit" value="Ta bort" class="button-classic">
+                                </form>
+                                <form action="/todos/<%= element['id']%>/updatestatus" method="POST">
+                                    <input type="submit" value="Inte färdig"
+                                    name="status_complete" class="button-classic">
+                                </form>
+                                <form action="/todos/<%= element['id']%>/edit" method="GET">
+                                    <input type="submit" value="Ändra" class="button-hollow">
+                                </form>
+                            </div>
+                        </div>
+                    <%end%>
+                <%end%>
+            </div>
+        </div>
+
+    </div>        
+
+    <div class="place-new-to-dos-container">
+        <h2>Ny ToDo</h2>
+        <form action="/todos" method="post">
+            <label>Titel <input type="text" name="title"></label>
+            <label>Beskrivning</label>
+            <textarea class="textarea" name="description" rows="5"></textarea>
+            <%# <label for="option">Kategori</label>
+            <select id="kategori" name="category">
+                <option value="kategori1">kategori 1</option>
+                <option value="kategori2">kategori 2</option>
+                <option value="kategori3">kategori 3</option>
+            </select> %>
+            <label for="due-date">Due date</label>
+            <input type="date" id="due-date" name="due_date">
+            <input type="submit" value="Spara" class="button-classic">
+        </form>
+    </div>
+
+
+
+</section>
