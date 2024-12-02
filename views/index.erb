@@ -14,6 +14,9 @@
                             <div class="to-do-info">
                                 <div class="">
                                     <h3><%= element['title'] %></h3>
+                                
+                                    <p><%= element['name']%></p>
+                                    
                                     
                                 </div>
                                 <div class="date-info">
@@ -89,9 +92,10 @@
     <div class="place-new-to-dos-container">
         <h2>Ny ToDo</h2>
         <form action="/todos" method="post">
-            <label>Titel <input type="text" name="title"></label>
+            <label>Titel<input type="text" name="title"></label>
             <label>Beskrivning</label>
             <textarea class="textarea" name="description" rows="5"></textarea>
+            <label for="category">Kategorier<input type="text" name="category" placeholder="ex. kategori1;kategori2;kategori3 osv (beta)"></label>
             <%# <label for="option">Kategori</label>
             <select id="kategori" name="category">
                 <option value="kategori1">kategori 1</option>

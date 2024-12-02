@@ -21,17 +21,64 @@ class App < Sinatra::Base
 
     #Routen hämtar alla frukter i databasen
     get '/todos' do
-        @not_completed_todos = db.execute('SELECT * FROM todos WHERE status_complete = false ORDER BY id')
-        @completed_todos = db.execute('SELECT * FROM todos WHERE status_complete = true ORDER BY id')
+        @not_completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
+            FROM categories 
+                INNER JOIN todos_categories 
+                ON todos_categories.category_id = categories.id 
+                INNER JOIN todos
+                ON todos_categories.todo_id = todos.id
+            WHERE todos.status_complete = false 
+            ORDER BY todos.id')
+        @completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
+            FROM categories 
+                INNER JOIN todos_categories 
+                ON todos_categories.category_id = categories.id 
+                INNER JOIN todos
+                ON todos_categories.todo_id = todos.id
+            WHERE todos.status_complete = true 
+            ORDER BY todos.id')
+
         erb(:"index")
+
+        # category_id = db.execute("SELECT category_id FROM todos_categories WHERE todo_id=?", todo_id).first['category_id']
+
+
     end
 
     post '/todos' do 
         title = params['title']
         description = params['description']
-        # category = params['category']
+        categories = params['category']
+        categories = categories.split(";")
         due_date = params['due_date']
+
         db.execute("INSERT INTO todos (title, description, due_date, post_date) VALUES(?,?,?, DATE('now'))", [title, description, due_date])
+
+
+        categories.each do |category|
+            db.execute("INSERT INTO categories (name) VALUES(?)", category)
+        end 
+
+
+        todo_id = db.execute("SELECT id FROM todos WHERE title = ?", title).first['id']
+        
+
+        category_ids = []
+        categories.each do |category|
+            category_ids << db.execute("SELECT id FROM categories WHERE name = ?", category).first['id']
+        end
+
+        p category_ids
+
+        category_ids.each do |category_id|
+            p todo_id
+            p category_id
+            db.execute("INSERT INTO todos_categories (todo_id, category_id) VALUES(?,?)", [todo_id, category_id])
+        end
+
+
+
+
         redirect("/")
 
     end
@@ -48,33 +95,6 @@ class App < Sinatra::Base
         redirect("/")
     end
 
-    # # Övning no. 2.1
-    # # Routen visar ett formulär för att spara en ny frukt till databasen.
-    # get '/fruits/new' do 
-    #     erb(:"fruits/new")
-    # end
-
-    # # Övning no. 2.2
-    # # Routen sparar en frukt till databasen och gör en redirect till '/fruits'.
-    # post '/fruits' do 
-    #     p params
-    #     #todo
-    # end
-
-    # # Övning no. 1
-    # # Routen visar en frukt.
-    # get '/fruits/:id_num' do | id_num |
-      
-    #     @fruit = db.execute('SELECT * FROM fruits WHERE id=?', id_num).first
-   
-    #     erb(:"fruits/show")
-    # end
-
-
-
-
-
-
     get '/todos/:id/edit' do |id|
         @todo = db.execute('SELECT * FROM todos WHERE id=?', id).first
         erb(:"edit")
@@ -85,9 +105,8 @@ class App < Sinatra::Base
 
         title = params['title']
         description = params['description']
-        # category = params['category']
+        category = params['category']
         due_date = params['due_date']
-
         
         db.execute("UPDATE todos SET title=?, description=?, due_date=?, post_date=DATE('now') WHERE id=?", [[title, description, due_date], id])
         redirect("/")
