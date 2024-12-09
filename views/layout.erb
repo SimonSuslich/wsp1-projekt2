@@ -13,6 +13,9 @@
 <body>
     <header>
         <h1>ToDo's</h1>
+        <% if session[:user_id]%>
+            <a href="/logout">log out</a>
+        <% end %>
     </header>
     
     <%= yield %>

@@ -24,6 +24,7 @@ class Seeder
     db.execute('DROP TABLE IF EXISTS todos')
     db.execute('DROP TABLE IF EXISTS categories')
     db.execute('DROP TABLE IF EXISTS todos_categories')
+    db.execute('DROP TABLE IF EXISTS users')
   end
 
   def self.create_tables
@@ -41,6 +42,10 @@ class Seeder
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 todo_id INTEGER,
                 category_id INTEGER)')
+    db.execute('CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
+                password TEXT NOT NULL)')
   end
 
   # def self.populate_tables

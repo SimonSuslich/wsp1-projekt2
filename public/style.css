@@ -113,14 +113,16 @@ h2 {
 }
 
 .place-new-to-dos-container form,
-.update-to-dos-container form {
+.update-to-dos-container form,
+.login-form {
   display: grid;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
 .place-new-to-dos-container label,
-.update-to-dos-container label {
+.update-to-dos-container label,
+.login-form label {
   text-align: start;
   display: grid;
   gap: 0.25rem;

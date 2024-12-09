@@ -1,4 +1,9 @@
+require 'securerandom'
+require 'sinatra'
+
 class App < Sinatra::Base
+
+
 
     # Funktion som returnerar en databaskoppling
     # Exempel på användning: db.execute('SELECT * FROM fruits')
@@ -12,15 +17,30 @@ class App < Sinatra::Base
     end
 
 
+    configure do
+        p "hello    "
+        enable :sessions
+        set :session_secret, SecureRandom.hex(64)
+    end
+
     
-    # Routen gör en redirect till '/fruits'
+
     get '/' do
-        redirect("/todos")
+        redirect("/user")
+    end
+
+    def authenticated
+        if !session[:user_id] 
+            redirect("/user")
+        end
     end
 
 
-    #Routen hämtar alla frukter i databasen
+    #Routen hämtar alla todos i databasen
     get '/todos' do
+
+        authenticated()
+
         not_completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
             FROM categories 
                 INNER JOIN todos_categories 
@@ -30,7 +50,7 @@ class App < Sinatra::Base
             WHERE todos.status_complete = false 
             ORDER BY todos.id')
         completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
-            FROM categories 
+            FROM categories
                 INNER JOIN todos_categories 
                 ON todos_categories.category_id = categories.id 
                 INNER JOIN todos
@@ -85,6 +105,10 @@ class App < Sinatra::Base
     end
 
     post '/todos/new' do 
+
+        authenticated()
+
+
         title = params['title']
         description = params['description']
         categories = params['category']
@@ -122,12 +146,20 @@ class App < Sinatra::Base
     end
 
     post '/todos/:id/delete' do | id |
+
+        authenticated()
+
         db.execute('DELETE FROM todos WHERE id = ?', id)
         db.execute('DELETE FROM todos_categories WHERE todo_id = ?', id)
         redirect("/todos")        
     end
 
     post '/delete-all' do
+
+        if session[:user_id] 
+            redirect("/user")
+        end
+
         db.execute('DELETE FROM todos')
         db.execute('DELETE FROM categories')
         db.execute('DELETE FROM todos_categories')
@@ -135,6 +167,9 @@ class App < Sinatra::Base
     end
 
     post '/todos/:id/updatestatus' do |id|
+
+        authenticated()
+
         status_complete = db.execute('SELECT status_complete FROM todos WHERE id = ?', id).first.first.last
         status_complete == 1 ? status_complete = 0 : status_complete = 1
         db.execute("UPDATE todos SET status_complete=? WHERE id=?", [status_complete, id])
@@ -142,6 +177,9 @@ class App < Sinatra::Base
     end
 
     get '/todos/:id/edit' do |id|
+
+        authenticated()
+
         todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
             FROM categories 
                 INNER JOIN todos_categories 
@@ -171,6 +209,8 @@ class App < Sinatra::Base
         
 
     post '/todos/:id/update' do |id|
+
+        authenticated()
 
         title = params['title']
         description = params['description']
@@ -204,4 +244,69 @@ class App < Sinatra::Base
 
         redirect("/todos")
     end
+
+
+    get '/register' do
+        erb(:"register")
+    end
+
+    post '/register' do
+        username = params['username']
+        cleartext_password = params['password'] 
+        hashed_password = BCrypt::Password.create(cleartext_password)
+        p hashed_password
+        db.execute('INSERT INTO users (username, password) VALUES(?,?)', [username, hashed_password.to_s])
+
+        user = db.execute('SELECT id FROM users WHERE username =?', username).first
+
+        p "session i guess"
+        session[:user_id] = user['id'] 
+        p session[:user_id]
+        redirect("/todos")
+    end
+
+
+    get '/login' do
+        erb(:"login")
+    end
+
+    post '/login' do
+        username = params['username']
+        cleartext_password = params['password'] 
+      
+
+        user = db.execute('SELECT * FROM users WHERE username = ?', username).first
+
+        if !user
+            redirect("/login_error")
+
+        end
+      
+
+        password_from_db = BCrypt::Password.new(user['password'])
+
+        if password_from_db == cleartext_password 
+            session[:user_id] = user['id'] 
+            redirect("/todos")
+        else
+            redirect("/login_error")
+
+        end
+      
+    end
+
+    get '/login_error' do 
+        erb(:"login_error")
+    end
+
+    get '/logout' do 
+        session.destroy
+        redirect("/user")
+    end
+
+    get '/user' do 
+        erb(:"user")
+    end
+
+
 end
