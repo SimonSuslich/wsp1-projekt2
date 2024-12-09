@@ -7,12 +7,9 @@
         <textarea class="textarea" rows="5" name="description"><%= @todo['description'] %></textarea>
 
         <label for="kategori">Kategori</label>
-        <select id="kategori" name="category">
-            <option value="kategori1" <%= @todo['category'] == 'kategori1' ? 'selected' : '' %>>kategori 1</option>
-            <option value="kategori2" <%= @todo['category'] == 'kategori2' ? 'selected' : '' %>>kategori 2</option>
-            <option value="kategori3" <%= @todo['category'] == 'kategori3' ? 'selected' : '' %>>kategori 3</option>
-            <option value="kategoriwan" <%= @todo['category'] == 'kategoriwan' ? 'selected' : '' %>>Namba wan</option>
-        </select>
+        <input type="text" name="category" placeholder="ex. kategori1;kategori2;kategori3 osv (beta)" value="<%= @todo_categories%>">
+
+        
 
         <label for="due-date">Due date</label>
         <input type="date" id="due-date" name="due_date" value="<%= @todo['due_date'] %>">
