@@ -140,3 +140,25 @@ textarea {
   font-family: "Montserrat", sans-serif;
 
 }
+
+
+.login-form {
+  place-content: center;
+  margin-top: 2rem;
+}
+
+footer {
+  background-color: var(--bg-color2);
+  height: auto;
+  padding: 1rem;
+  bottom: 0;
+}
+
+.log-btn {
+  display: grid;
+  place-self: center;
+}
+
+.margin-1 {
+  margin: 1rem;
+}

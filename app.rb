@@ -18,7 +18,6 @@ class App < Sinatra::Base
 
 
     configure do
-        p "hello    "
         enable :sessions
         set :session_secret, SecureRandom.hex(64)
     end
@@ -36,72 +35,129 @@ class App < Sinatra::Base
     end
 
 
-    #Routen hämtar alla todos i databasen
-    get '/todos' do
+    def getTodos(filter=nil, sort="todos.id")
+        
 
-        authenticated()
+        all_todos = []
 
-        not_completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
+        [false, true].each do |bool|
+            db_execute_string = 'SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
             FROM categories 
                 INNER JOIN todos_categories 
                 ON todos_categories.category_id = categories.id 
                 INNER JOIN todos
                 ON todos_categories.todo_id = todos.id
-            WHERE todos.status_complete = false 
-            ORDER BY todos.id')
-        completed_todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
-            FROM categories
-                INNER JOIN todos_categories 
-                ON todos_categories.category_id = categories.id 
-                INNER JOIN todos
-                ON todos_categories.todo_id = todos.id
-            WHERE todos.status_complete = true 
-            ORDER BY todos.id')
+            WHERE todos.status_complete = ' + bool.to_s
 
-        @not_completed_todos = []
-        not_completed_todos.each_with_index do |todo, i|
-            element_exists = false
-            @not_completed_todos.each do |element|
-                element['id'] == todo['id'] ? element_exists = true : nil
-            end 
+            filter!=nil ? db_execute_string += " AND categories.id = " + filter.to_s : nil
 
-            if element_exists
-                @not_completed_todos.each do |arr_todo|
-                    if arr_todo['id'] == todo['id']
-                        arr_todo['name'] << todo['name']
+            db_execute_string += "\nORDER BY " + sort
+
+            all_todos << db.execute(db_execute_string)
+
+        end
+        
+        not_completed_todos, completed_todos = all_todos
+
+        return_todos = [[], []]
+
+        all_todos.each_with_index do |big_todo, j|
+
+            big_todo.each_with_index do |todo, i|
+                element_exists = false
+                return_todos[j].each do |element|
+                    element['id'] == todo['id'] ? element_exists = true : nil
+                end 
+
+                if element_exists
+                    return_todos[j].each do |arr_todo|
+                        if arr_todo['id'] == todo['id']
+                            p todo['name']
+                            arr_todo['name'] << todo['name']
+                        end
                     end
+                else
+                    todo['name'] = [todo['name']]
+                    return_todos[j] << todo
                 end
-            else
-                todo['name'] = [todo['name']]
-                @not_completed_todos << todo
             end
+
         end
 
+        return return_todos
 
-        @completed_todos = []
-        completed_todos.each_with_index do |todo, i|
-            element_exists = false
-            @completed_todos.each do |element|
-                element['id'] == todo['id'] ? element_exists = true : nil
-            end 
-
-            if element_exists
-                @completed_todos.each do |arr_todo|
-                    if arr_todo['id'] == todo['id']
-                        arr_todo['name'] << todo['name']
-                    end
-                end
-            else
-                todo['name'] = [todo['name']]
-                @completed_todos << todo
-            end
-        end
+    end
 
 
+
+    #Routen hämtar alla todos i databasen
+    get '/todos' do
+
+        authenticated()
+
+        @not_completed_todos, @completed_todos = getTodos()
+
+        @all_categories = db.execute('SELECT * FROM categories')
+        p @all_categories
 
         erb(:"index")
+    end
+
+    post '/todos/sort' do 
+        sort_info = params['sort_info']
+
+        if sort_info.to_s == "-"
+            redirect("/todos")
+        end
+
+        redirect_to = '/todos/sort/' + sort_info.to_s
+        redirect(redirect_to)   
+    end
+
+    get '/todos/sort/:sort_info' do |sort_info|
 
 
+
+    end
+
+
+    post '/todos/filter-sort' do
+        sort_info = params['sort_info']
+        category_id = params['category']
+
+
+        redirect_to = '/todos/filter-sort/' + category_id.to_s + '/' + sort_info.to_s
+        redirect(redirect_to)   
+
+    end
+
+    get '/todos/filter-sort/:category_id/:sort_info' do |category_id, sort_info|
+
+        authenticated()
+
+        if category_id.to_s == "-" && sort_info == "-"
+            redirect('/todos')
+        end
+
+        category_id.to_s == "-" ? category_id = nil : nil
+
+        case sort_info
+        when "due-date-inc" then sort_info = "todos.due_date ASC"
+        when "due-date-dec" then sort_info = "todos.due_date DESC"
+        when "post-date-dec" then sort_info = "todos.post_date DESC"
+        when "post-date-inc" then sort_info = "todos.post_date ASC"
+        when "titel" then sort_info = "todos.title"
+        when "category" then sort_info = "categories.name"
+        else sort_info = "todos.id"
+        end
+        
+
+        @not_completed_todos, @completed_todos = getTodos(filter=category_id, sort=sort_info)
+
+        @all_categories = db.execute('SELECT * FROM categories')
+        p @all_categories
+
+        erb(:'index')
     end
 
     post '/todos/new' do 
@@ -156,9 +212,7 @@ class App < Sinatra::Base
 
     post '/delete-all' do
 
-        if session[:user_id] 
-            redirect("/user")
-        end
+        authenticated()
 
         db.execute('DELETE FROM todos')
         db.execute('DELETE FROM categories')

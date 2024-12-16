@@ -2,8 +2,38 @@
 
     <div class="all-to-dos-container">        
         
+        <form action="/todos/filter-sort" method="post">
+            <label>Filtrera kategorier</label>
+            <select id="kategori" name="category">
+                <option value="-">Välj filter</option>
+                <% @all_categories.each do |category|%>
+                    <option value="<%= category['id']%>"><%= category['name']%></option>
+                <%end%>
+            </select>
+            <label>Sortera</label>
+            <select id="" name="sort_info">
+                <option value="-">Välj sorteringsmetod</option>
+                <option value="due-date-inc">Due date - tidigaste</option>
+                <option value="due-date-dec">Due date - senaste</option>
+                <option value="post-date-inc">Post date - tidigaste</option>
+                <option value="post-date-dec">Post date - senaste</option>
+                <option value="titel">Titel - alfabetisk</option>
+                <option value="category">Kategorier - alfabetisk</option>
+            </select>
+            <input type="submit" value="Sök" class="button-classic">
+        </form>
+        <form action="/todos" method="get">
+            <input type="submit" value="Rensa" class="button-hollow">                    
+        </form>
+
         <div class="active-to-dos-container">
+
+
+
+
             <h2>ToDo's to do</h2>
+            
+            
 
 
             <div class="to-do-card-container">
@@ -51,6 +81,7 @@
 
 
             <div class="to-do-card-container">
+
 
                 <%if @completed_todos%>
 

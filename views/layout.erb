@@ -13,12 +13,18 @@
 <body>
     <header>
         <h1>ToDo's</h1>
-        <% if session[:user_id]%>
-            <a href="/logout">log out</a>
-        <% end %>
     </header>
     
     <%= yield %>
+
+
+    
+        <% if session[:user_id]%>
+            <footer>
+                <a href="/logout" class="button-classic log-btn">log out</a>
+            </footer>
+        <% end %>
+
 
 </body>
 
