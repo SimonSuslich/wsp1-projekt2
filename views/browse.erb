@@ -1,0 +1,136 @@
+
+<section class="browse">
+    <div class="filter-container">
+        <form action="" method="post">
+            <div class="filter label-select">
+                <label>Filtrer products</label>
+                <select id="product-type" name="product_type">
+                    <option value="-">Product type</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+                <select id="brand" name="brand">
+                    <option value="-">Brand</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+                <select id="year" name="year">
+                    <option value="-">Year</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+                <select id="price" name="price">
+                    <option value="-">Price</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+                <select id="condition" name="condition">
+                    <option value="-">Condition</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+            </div>
+            <div class="sort label-select">
+                <label>Sort products</label>
+                <select id="" name="sort_info">
+                    <option value="-">Ingen sortering</option>
+                    <option value="-">Välj 1</option>
+                    <option value="-">Välj 2</option>
+                </select>
+            </div>
+            <div class="btn-clear">
+                <input type="reset" value="Clear" class="btn-1 btn-color">
+            </div>
+            <div class="btn-submit">
+                <input type="submit" value="Search" class="btn-1 btn-color">
+            </div>
+
+        </form>
+    </div>
+
+    <div class="card-container">
+
+        <% if !@all_products.empty? %>
+
+            <%@all_products.each do |product|%>
+
+
+
+
+
+
+
+                <div class="card">
+                    <div class="img-container">
+                        <img src="<%= product["image_path"].first%>" alt="<%= product["title"]%>">
+                    </div>
+                    <div class="info-container">
+                        <p class="title"><%= product["title"]%></p>
+                        <p class="price"><%= product["price"]%> SEK</p>
+                        <ul class="basic-info">
+
+                            <%product[:basic_info].each do |element|%>
+
+                                <li class="">
+                                    <p class="label"><%= element[:header]%></p>
+                                    <p class="info"><%= element[:value]%></p>
+                                </li>
+
+                            <%end%>
+
+
+                        </ul>
+                    </div>
+                    <div class="user-interactions-container">
+                        <button class="user-interaction-1 save">
+                            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width="16" height="16"
+                                class="icon-white">
+                                <path
+                                    d="m6.516 14.323-1.49 6.452a.998.998 0 0 0 1.529 1.057L12 18.202l5.445 3.63a1.001 1.001 0 0 0 1.517-1.106l-1.829-6.4 4.536-4.082a1 1 0 0 0-.59-1.74l-5.701-.454-2.467-5.461a.998.998 0 0 0-1.822 0L8.622 8.05l-5.701.453a1 1 0 0 0-.619 1.713l4.214 4.107zm2.853-4.326a.998.998 0 0 0 .832-.586L12 5.43l1.799 3.981a.998.998 0 0 0 .832.586l3.972.315-3.271 2.944c-.284.256-.397.65-.293 1.018l1.253 4.385-3.736-2.491a.995.995 0 0 0-1.109 0l-3.904 2.603 1.05-4.546a1 1 0 0 0-.276-.94l-3.038-2.962 4.09-.326z">
+                                </path>
+                            </svg>
+                            SAVE
+                        </button>
+
+                        <button class="user-interaction-1 share">
+                            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'
+                                class="icon-white">
+                                <path
+                                    d="M11 7.05V4a1 1 0 0 0-1-1 1 1 0 0 0-.7.29l-7 7a1 1 0 0 0 0 1.42l7 7A1 1 0 0 0 11 18v-3.1h.85a10.89 10.89 0 0 1 8.36 3.72 1 1 0 0 0 1.11.35A1 1 0 0 0 22 18c0-9.12-8.08-10.68-11-10.95zm.85 5.83a14.74 14.74 0 0 0-2 .13A1 1 0 0 0 9 14v1.59L4.42 11 9 6.41V8a1 1 0 0 0 1 1c.91 0 8.11.2 9.67 6.43a13.07 13.07 0 0 0-7.82-2.55z">
+                                </path>
+                            </svg>
+                            SHARE
+                        </button>
+
+                        <button class="user-interaction-2 view-details">
+                            VIEW DETAILS
+                            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'
+                                class="icon-white">
+                                <path
+                                    d="m11.293 17.293 1.414 1.414L19.414 12l-6.707-6.707-1.414 1.414L15.586 11H6v2h9.586z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            <%end%>
+
+
+
+        <% else %>
+            <h1>No products could be found</h1>
+        <% end %>
+
+
+
+    </div>
+    <div class="cards-list-container">
+    </div>
+</section>

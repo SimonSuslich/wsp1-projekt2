@@ -1,5 +1,7 @@
 require 'securerandom'
 require 'sinatra'
+require 'fileutils' # For creating directories
+
 
 class App < Sinatra::Base
 
@@ -10,23 +12,34 @@ class App < Sinatra::Base
     def db
         return @db if @db
 
-        @db = SQLite3::Database.new("db/todos.sqlite")
+        @db = SQLite3::Database.new("db/vcars.sqlite")
         @db.results_as_hash = true
 
         return @db
     end
 
 
-    configure do
-        enable :sessions
-        set :session_secret, SecureRandom.hex(64)
+    def clear_products_folder
+        folder_path = "public/img/products"
+    
+        if Dir.exist?(folder_path)
+        # Remove all contents (files and subfolders)
+        FileUtils.rm_rf(Dir.glob("#{folder_path}/*"))
+        puts "Cleared all contents of the products folder."
+        else
+        puts "The products folder does not exist."
+        end
     end
+    
+
+
+    # configure do
+    #     enable :sessions
+    #     set :session_secret, SecureRandom.hex(64)
+    # end
 
     
 
-    get '/' do
-        redirect("/user")
-    end
 
     def authenticated
         if !session[:user_id] 
@@ -35,332 +48,145 @@ class App < Sinatra::Base
     end
 
 
-    def getTodos(filter=nil, sort="todos.id")
-        
-
-        all_todos = []
-
-        [false, true].each do |bool|
-            db_execute_string = 'SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
-            FROM categories 
-                INNER JOIN todos_categories 
-                ON todos_categories.category_id = categories.id 
-                INNER JOIN todos
-                ON todos_categories.todo_id = todos.id
-            WHERE todos.status_complete = ' + bool.to_s
-
-            filter!=nil ? db_execute_string += " AND categories.id = " + filter.to_s : nil
-
-            db_execute_string += "\nORDER BY " + sort
-
-            all_todos << db.execute(db_execute_string)
-
-        end
-        
-        not_completed_todos, completed_todos = all_todos
-
-        return_todos = [[], []]
-
-        all_todos.each_with_index do |big_todo, j|
-
-            big_todo.each_with_index do |todo, i|
-                element_exists = false
-                return_todos[j].each do |element|
-                    element['id'] == todo['id'] ? element_exists = true : nil
-                end 
-
-                if element_exists
-                    return_todos[j].each do |arr_todo|
-                        if arr_todo['id'] == todo['id']
-                            p todo['name']
-                            arr_todo['name'] << todo['name']
-                        end
-                    end
-                else
-                    todo['name'] = [todo['name']]
-                    return_todos[j] << todo
-                end
-            end
-
-        end
-
-        return return_todos
-
-    end
 
 
 
-    #Routen hämtar alla todos i databasen
-    get '/todos' do
 
-        authenticated()
-
-        @not_completed_todos, @completed_todos = getTodos()
-
-        @all_categories = db.execute('SELECT * FROM categories')
-        p @all_categories
-
+    
+    get '/' do
         erb(:"index")
     end
 
-    post '/todos/sort' do 
-        sort_info = params['sort_info']
-
-        if sort_info.to_s == "-"
-            redirect("/todos")
-        end
-
-        redirect_to = '/todos/sort/' + sort_info.to_s
-        redirect(redirect_to)   
-    end
-
-    get '/todos/sort/:sort_info' do |sort_info|
 
 
-
+    get '/admin/delete_all_images' do
+        clear_products_folder()
+        redirect("/admin")
     end
 
 
-    post '/todos/filter-sort' do
-        sort_info = params['sort_info']
-        category_id = params['category']
+    get '/browse' do
+
+        all_products = db.execute("SELECT products.id, products.title, products.description, products.brand, products.price, products.model_year, products.fuel, products.horse_power, products.milage_km, products.exterior_color, products.product_type, products.condition, product_images.image_path
+            FROM products
+                INNER JOIN product_images
+                ON products.id = product_images.product_id")
 
 
-        redirect_to = '/todos/filter-sort/' + category_id.to_s + '/' + sort_info.to_s
-        redirect(redirect_to)   
+        @all_products = []
 
-    end
+        all_products.each_with_index do |product, i|
+            element_exists = false
+            @all_products.each do |element|
+                element['id'] == product['id'] ? element_exists = true : nil
+            end 
 
-    get '/todos/filter-sort/:category_id/:sort_info' do |category_id, sort_info|
-
-        authenticated()
-
-        if category_id.to_s == "-" && sort_info == "-"
-            redirect('/todos')
-        end
-
-        category_id.to_s == "-" ? category_id = nil : nil
-
-        case sort_info
-        when "due-date-inc" then sort_info = "todos.due_date ASC"
-        when "due-date-dec" then sort_info = "todos.due_date DESC"
-        when "post-date-dec" then sort_info = "todos.post_date DESC"
-        when "post-date-inc" then sort_info = "todos.post_date ASC"
-        when "titel" then sort_info = "todos.title"
-        when "category" then sort_info = "categories.name"
-        else sort_info = "todos.id"
-        end
-        
-
-        @not_completed_todos, @completed_todos = getTodos(filter=category_id, sort=sort_info)
-
-        @all_categories = db.execute('SELECT * FROM categories')
-        p @all_categories
-
-        erb(:'index')
-    end
-
-    post '/todos/new' do 
-
-        authenticated()
-
-
-        title = params['title']
-        description = params['description']
-        categories = params['category']
-        categories = categories.split(";")
-        due_date = params['due_date']
-
-        db.execute("INSERT INTO todos (title, description, due_date, post_date) VALUES(?,?,?, DATE('now'))", [title, description, due_date])
-
-
-        current_categories = db.execute('SELECT name FROM categories')
-
-        current_categories = current_categories.map { |hash| hash["name"] }
-
-        categories.each do |category|
-            if !current_categories.include?(category)
-                db.execute("INSERT INTO categories (name) VALUES(?)", category)
+            if element_exists
+                @all_products.each do |arr_product|
+                    if arr_product['id'] == product['id']
+                        arr_product['image_path'] << product['image_path']
+                    end
+                end
+            else
+                product['image_path'] = [product['image_path']]
+                @all_products << product
             end
-        end 
-
-
-        todo_id = db.execute("SELECT id FROM todos WHERE title = ?", title).first['id']
-        
-
-        category_ids = []
-        categories.each do |category|
-            category_ids << db.execute("SELECT id FROM categories WHERE name = ?", category).first['id']
         end
 
-        category_ids.each do |category_id|
-            db.execute("INSERT INTO todos_categories (todo_id, category_id) VALUES(?,?)", [todo_id, category_id])
-        end
 
-        redirect("/todos")
+        @all_products.each do |product|
+            basic_info = []
+            banned_key = ["title", "product_type", "description", "id", "price", "image_path"]
 
-    end
+            product.each do |key, value|
+                if !banned_key.include?(key) && value.to_s != ""
+                    element = {
+                        header: prettyPrintKey(key),
+                        value: value
+                    }
+                    basic_info << element
 
-    post '/todos/:id/delete' do | id |
-
-        authenticated()
-
-        db.execute('DELETE FROM todos WHERE id = ?', id)
-        db.execute('DELETE FROM todos_categories WHERE todo_id = ?', id)
-        redirect("/todos")        
-    end
-
-    post '/delete-all' do
-
-        authenticated()
-
-        db.execute('DELETE FROM todos')
-        db.execute('DELETE FROM categories')
-        db.execute('DELETE FROM todos_categories')
-        redirect('/todos')
-    end
-
-    post '/todos/:id/updatestatus' do |id|
-
-        authenticated()
-
-        status_complete = db.execute('SELECT status_complete FROM todos WHERE id = ?', id).first.first.last
-        status_complete == 1 ? status_complete = 0 : status_complete = 1
-        db.execute("UPDATE todos SET status_complete=? WHERE id=?", [status_complete, id])
-        redirect("/todos")
-    end
-
-    get '/todos/:id/edit' do |id|
-
-        authenticated()
-
-        todos = db.execute('SELECT todos.id, todos.title, todos.description, todos.due_date, todos.post_date, todos.status_complete, categories.name
-            FROM categories 
-                INNER JOIN todos_categories 
-                ON todos_categories.category_id = categories.id 
-                INNER JOIN todos
-                ON todos_categories.todo_id = todos.id
-            WHERE todos.id=?', id)
-
-
-        all_categories = []
-        todos.each do |todo|
-            all_categories << todo['name']
-        end
-
-        @todo = todos.first
-
-        @todo['name'] = all_categories
-
-        @todo_categories = ""
-        all_categories.each do |category|
-            @todo_categories += category+";"
-        end
-        @todo_categories = @todo_categories.chop
-
-        erb(:"edit")
-    end
-        
-
-    post '/todos/:id/update' do |id|
-
-        authenticated()
-
-        title = params['title']
-        description = params['description']
-        categories = params['category']
-        categories = categories.split(";")
-        due_date = params['due_date']
-        
-        db.execute("UPDATE todos SET title=?, description=?, due_date=?, post_date=DATE('now') WHERE id=?", [[title, description, due_date], id]) 
-
-        current_categories = db.execute('SELECT name FROM categories')
-
-        current_categories = current_categories.map { |hash| hash["name"] }
-
-        categories.each do |category|
-            if !current_categories.include?(category)
-                db.execute("INSERT INTO categories (name) VALUES(?)", category)
+                end
             end
-        end 
 
+            product[:basic_info] = basic_info
 
-        categories_id = []
-        categories.each do |category|
-            categories_id << db.execute('SELECT id FROM categories WHERE name=?', category).first['id']
         end
 
-        db.execute('DELETE FROM todos_categories WHERE todo_id=?', id)
-
-        categories_id.each do |category_id|
-            db.execute('INSERT INTO todos_categories (todo_id, category_id) VALUES(?,?)', [id, category_id])
-        end
-
-        redirect("/todos")
+        erb(:"browse")
     end
 
 
-    get '/register' do
-        erb(:"register")
+    def prettyPrintKey(str)
+        # Split, capitalize the first word, and downcase the rest
+        result = str.split('_').map.with_index { |word, index| 
+            index == 0 ? word.capitalize : word.downcase
+        }.join(' ')
+  
+        return result
     end
 
-    post '/register' do
-        username = params['username']
-        cleartext_password = params['password'] 
-        hashed_password = BCrypt::Password.create(cleartext_password)
-        p hashed_password
-        db.execute('INSERT INTO users (username, password) VALUES(?,?)', [username, hashed_password.to_s])
-
-        user = db.execute('SELECT id FROM users WHERE username =?', username).first
-
-        p "session i guess"
-        session[:user_id] = user['id'] 
-        p session[:user_id]
-        redirect("/todos")
+    get '/admin' do
+        erb(:"admin")
     end
 
 
-    get '/login' do
-        erb(:"login")
+    get '/admin/create_new_product' do 
+        erb(:"new_product")
     end
 
-    post '/login' do
-        username = params['username']
-        cleartext_password = params['password'] 
+
+    post '/admin/create_new_product' do 
+
+        # Access form fields
+        title = params['title']
+        price = params['price']
+        product_type = params['product_type']
+        model_year = params['model_year']
+        brand = params['brand']
+        fuel = params['fuel']
+        horse_power = params['horse_power']
+        milage_km = params['milage_km']
+        exterior_color = params['exterior_color']
+        condition = params['condition']
+        description = params['description']
       
-
-        user = db.execute('SELECT * FROM users WHERE username = ?', username).first
-
-        if !user
-            redirect("/login_error")
-
+        # Insert product into the database
+        db.execute(
+            "INSERT INTO products (title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
+        )
+      
+        # Get the product ID for the uploaded images
+        product_id = db.last_insert_row_id
+      
+        # Ensure the product folder exists
+        product_folder = "public/img/products/#{product_id}"
+        FileUtils.mkdir_p(product_folder)
+      
+        # Handle uploaded images
+        if params[:images]
+            # Process each uploaded file
+            Array(params[:images]).each do |uploaded_file|
+                # Generate a unique filename
+                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
+                filepath = "img/products/#{product_id}/#{unique_filename}" # Relative path
+                absolute_path = File.join("public", filepath) # Absolute path
+        
+                # Save the file
+                File.open(absolute_path, 'wb') do |file|
+                file.write(uploaded_file[:tempfile].read)
+                end
+        
+                # Save the file path in the database
+                db.execute("INSERT INTO product_images (product_id, image_path) VALUES (?, ?)", [product_id, filepath])
+            end
         end
       
-
-        password_from_db = BCrypt::Password.new(user['password'])
-
-        if password_from_db == cleartext_password 
-            session[:user_id] = user['id'] 
-            redirect("/todos")
-        else
-            redirect("/login_error")
-
-        end
+        # Redirect back to the admin page
+        redirect("/admin")
+    end 
       
-    end
-
-    get '/login_error' do 
-        erb(:"login_error")
-    end
-
-    get '/logout' do 
-        session.destroy
-        redirect("/user")
-    end
-
-    get '/user' do 
-        erb(:"user")
-    end
-
 
 end

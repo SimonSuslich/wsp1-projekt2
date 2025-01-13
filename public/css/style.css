@@ -1,0 +1,452 @@
+@import url('https://fonts.googleapis.com/css2?family=Blinker:wght@100;200;300;400;600;700;800;900&display=swap');
+
+
+:root {
+    /* COLOR */
+    --main-color-1: #7c038c;
+    --main-color-2: #4F0259;
+    --main-color-3: #380140;
+    --bg-color-1: #0D0D0D;
+    --bg-color-2: #1E0126;
+    --text-color-1: #f2f2f2;
+    --text-color-2: #bbbbbb;
+
+    /* Z-INDEX */
+    --z-index-header: 3;
+    --z-index-menu: 2;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: 0;
+    outline: none;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-color-1);
+    color: var(--text-color-1);
+    font-family: 'Blinker', sans-serif;
+    letter-spacing: 1px;
+    overflow-x: hidden;
+    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+header {
+    position: fixed;
+    z-index: var(--z-index-header);
+    width: 100%;
+    height: 80px;
+    background-color: var(--bg-color-1);
+    display: grid;
+    align-items: center;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 3rem;
+
+    padding: 0px 10%;
+}
+
+nav {
+    width: auto;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+nav ul li a {
+    color: var(--text-color-1);
+    font-size: 1.2rem;
+    position: relative;
+}
+
+header .logo {
+    height: 48px;
+}
+
+
+nav ul li a::before {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -0.25rem;
+    border-radius: 0.125rem;
+    left: 0;
+    width: 0;
+    height: 0.25rem;
+    background-color: var(--main-color-1);
+    transition: width 0.5s ease;
+}
+
+nav ul li:hover a::before {
+    width: 100%;
+}
+
+nav ul li a:hover {
+    cursor: pointer;
+}
+
+.user-controlls-container {
+    display: flex;
+    justify-content: end;
+    gap: 2rem;
+}
+
+.user-controlls-container .user-controlls {
+    list-style: none;
+    display: grid;
+    place-self: center end;
+    place-items: center;
+    grid-template-columns: 1fr 1fr;
+    width: 50%;
+    gap: 1rem;
+}
+
+.user-controlls-container .buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.user-controlls-container .buttons svg:hover {
+    cursor: pointer;
+}
+
+
+.btn-1 {
+    border-radius: 0.5rem;
+    font-family: 'Blinker', sans-serif;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: 0.15s ease-in-out;
+    background-color: var(--text-color-1);
+    border: var(--text-color-1) 2px solid;
+    color: var(--bg-color-1);
+}
+
+
+
+.btn-expand:hover {
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+}
+
+.btn-color:hover {
+    background-color: transparent;
+    color: var(--text-color-1);
+}
+
+.btn-filled {
+    background-color: var(--text-color-1);
+    border: var(--text-color-1) 2px solid;
+    color: var(--bg-color-1);
+}
+
+.btn-hollow {
+    background-color: var(--bg-color-1);
+    border: var(--text-color-1) 2px solid;
+    color: var(--text-color-1);
+}
+
+.icon-white {
+    fill: var(--text-color-1);
+}
+
+.icon-small {
+    height: 16;
+    width: 16;
+}
+
+.icon-medium {
+    height: 24;
+    width: 24;
+}
+
+.icon-large {
+    height: 32;
+    width: 32;
+}
+
+.menu-buttons {
+    display: none;
+}
+
+.menu-buttons button {
+    background-color: transparent;
+}
+
+.menu-open {
+    display: block;
+}
+
+.menu-close {
+    display: none;
+}
+
+.header-filler {
+    width: 32px;
+    display: none;
+}
+
+.fade-menu {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(13, 13, 13, 0.7);
+    position: fixed;
+    display: none;
+}
+
+.visible {
+    display: block;
+}
+
+.show {
+    top: 0;
+}
+
+
+menu {
+    min-height: max-content;
+    width: 100vw;
+    background-color: var(--bg-color-1);
+    position: fixed;
+    top: -100vh;
+    left: 0;
+    z-index: var(--z-index-menu);
+    transition: 0.3s ease-in-out;
+    padding: 4rem 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 88px 0 2rem;
+}
+
+menu nav ul {
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+menu .user-controlls-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+menu .user-controlls-container .user-controlls {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+menu .user-controlls-container .buttons {
+    display: flex;
+    flex-direction: row;
+    width: min-content;
+}
+
+
+@media screen and (max-width: 1225px) {
+    header {
+        padding: 0 2rem;
+        gap: 1.5rem
+    }
+}
+
+@media screen and (max-width: 1130px) {
+    .menu-buttons {
+        display: flex;
+        justify-content: end;
+        align-items: cneter;
+    }
+
+    .user-controlls-container {
+        display: none;
+    }
+
+    .standard-nav {
+        display: none;
+    }
+
+    .header-filler {
+        display: block;
+    }
+}
+
+
+
+
+
+
+
+
+
+main {
+    padding: calc(80px + 2rem) 10% 2rem;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+form select {
+    font-family: 'Blinker', sans-serif;
+    background-color: var(--text-color-1);
+    color: var(--bg-color-1);
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    border: none;
+}
+
+form label {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+form select option {
+    background-color: var(--text-color-1);
+    color: var(--bg-color-1);
+}
+
+.label-select {
+    display: flex;
+    gap: 1rem;
+    justify-content: start;
+    align-items: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+footer {
+    padding: 88px 10% 2rem;
+    height: auto;
+    width: 100%;
+    background-color: var(--bg-color-1);
+
+
+    display: grid;
+    grid-template-areas:
+        'contact address social-medias'
+        'copyright copyright copyright';
+    grid-template-columns: auto;
+    grid-template-rows: auto;
+    row-gap: 2rem;
+    place-items: start center;
+}
+
+.contact,
+.address,
+.social-medias {
+    display: grid;
+    grid-template-rows: min-content auto;
+    row-gap: 1rem;
+    place-content: center;
+}
+
+
+footer .contact {
+    grid-area: contact;
+}
+
+footer ul {
+    list-style: none;
+}
+
+footer ul li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-color-2);
+    width: max-content;
+    transition: 0.3s ease-in-out;
+}
+
+footer ul li svg {
+    fill: var(--text-color-2);
+}
+
+footer ul li:hover {
+    color: var(--text-color-1);
+    cursor: pointer;
+}
+
+footer ul li:hover svg {
+    fill: var(--text-color-1);
+}
+
+footer .social-medias {
+    grid-area: social-medias;
+}
+
+footer .address {
+    grid-area: address;
+}
+
+footer .social-medias .container {
+    display: flex;
+    justify-content: start;
+    gap: 1rem;
+}
+
+footer .social-medias .container .social-media-link svg {
+    fill: var(--text-color-2);
+    width: 48px;
+    height: 48px;
+    border: var(--text-color-2) 3px solid;
+    border-radius: 50%;
+    padding: 0.5rem;
+    transition: 0.3s ease-in-out;
+}
+
+footer .social-medias .container .social-media-link svg:hover {
+    fill: var(--text-color-1);
+    border-color: var(--text-color-1);
+}
+
+footer .copyright {
+    grid-area: copyright;
+    color: var(--text-color-2);
+    text-align: center;
+    place-self: center;
+
+}
+
+@media screen and (max-width: 1000px) {
+    footer {
+        grid-template-areas:
+            'contact'
+            'address'
+            'social-medias'
+            'copyright';
+
+        place-content: center;
+        text-align: center;
+    }
+
+
+
+}

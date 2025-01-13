@@ -1,0 +1,88 @@
+:root {
+    /* COLOR */
+    --main-color-1: #7c038c;
+    --main-color-2: #4F0259;
+    --main-color-3: #380140;
+    --bg-color-1: #0D0D0D;
+    --bg-color-2: #1E0126;
+    --text-color-1: #f2f2f2;
+    --text-color-2: #bbbbbb;
+
+    /* Z-INDEX */
+    --z-index-header: 3;
+    --z-index-menu: 2;
+}
+
+.add_new_product_container {
+    display: grid;
+}
+
+.add_new_product_container form {
+    display: grid;
+    row-gap: 1rem;
+}
+
+.add_new_product_container form .part {
+    display: grid;
+}
+
+
+
+
+.image-preview-container {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.image-preview {
+    width: 160px;
+    height: 90px;
+    border: 2px dashed var(--main-color-1);
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.image-preview span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-color-1);
+    font-size: 1rem;
+    text-align: center;
+}
+
+
+.delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--text-color-1);
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+}
+
+.delete-btn svg {
+    fill: var(--main-color-1);
+    width: 24px;
+    height: 24px;
+}

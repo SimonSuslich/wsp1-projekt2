@@ -1,15 +1,3 @@
-# require 'sqlite3'
-
-# class Seeder
-
-#   def self.seed!
-#     p "doit"
-#   end
-
-# end
-
-# Seeder.seed!
-
 require 'sqlite3'
 
 class Seeder
@@ -17,28 +5,34 @@ class Seeder
   def self.seed!
     drop_tables
     create_tables
-    # populate_tables   
   end
 
   def self.drop_tables
-    db.execute('DROP TABLE IF EXISTS todos')
-    db.execute('DROP TABLE IF EXISTS categories')
-    db.execute('DROP TABLE IF EXISTS todos_categories')
+    db.execute('DROP TABLE IF EXISTS products')
+    db.execute('DROP TABLE IF EXISTS product_images')
+    db.execute('DROP TABLE IF EXISTS sales')
     db.execute('DROP TABLE IF EXISTS users')
   end
 
   def self.create_tables
-    db.execute('CREATE TABLE todos (
+    db.execute('CREATE TABLE products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 description TEXT,
-                due_date DATE,
-                post_date DATE,
-                status_complete INTEGER DEFAULT 0)')
-    db.execute('CREATE TABLE categories (
+                price INTEGER NOT NULL,
+                model_year INTEGER,
+                brand TEXT,
+                fuel TEXT,
+                horse_power TEXT,
+                milage_km INTEGER,
+                exterior_color TEXT,
+                product_type TEXT,
+                condition TEXT)')
+    db.execute('CREATE TABLE product_images (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT)')
-    db.execute('CREATE TABLE todos_categories (
+                product_id INTEGER NOT NULL,
+                image_path TEXT NOT NULL)')
+    db.execute('CREATE TABLE sales (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 todo_id INTEGER,
                 category_id INTEGER)')
@@ -48,17 +42,11 @@ class Seeder
                 password TEXT NOT NULL)')
   end
 
-  # def self.populate_tables
-  #   db.execute('INSERT INTO todos (title, description, category, due_date, post_date, status_complete) VALUES ("Thing 1", "Lala lblab bla", "Kategory", "2024-02-22", "2024-02-22", false)')
-  #   db.execute('INSERT INTO todos (title, description, category, due_date, post_date, status_complete) VALUES ("Thing 2", "To do bla", "Kategory", "2024-02-22", "2024-02-22", false)')
-  #   db.execute('INSERT INTO todos (title, description, category, due_date, post_date, status_complete) VALUES ("Thing 3", "CHmoki chmoki mi was ochen lyubin da tak sho vi nas uzhe zadolbali", "Kategory", "2024-02-22", "2024-02-22", true)')
-  # end
-
 
   private
   def self.db
     return @db if @db
-    @db = SQLite3::Database.new('db/todos.sqlite')
+    @db = SQLite3::Database.new('db/vcars.sqlite')
     @db.results_as_hash = true
     @db
   end

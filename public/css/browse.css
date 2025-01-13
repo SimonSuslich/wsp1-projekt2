@@ -1,0 +1,154 @@
+:root {
+    /* COLOR */
+    --main-color-1: #7c038c;
+    --main-color-2: #4F0259;
+    --main-color-3: #380140;
+    --bg-color-1: #0D0D0D;
+    --bg-color-2: #1E0126;
+    --text-color-1: #f2f2f2;
+    --text-color-2: #bbbbbb;
+
+    /* Z-INDEX */
+    --z-index-header: 3;
+    --z-index-menu: 2;
+}
+
+.filter-container form {
+    display: grid;
+    grid-template-areas:
+        'filter submit'
+        'sort clear';
+    grid-template-rows: auto;
+    grid-template-columns: auto;
+    place-content: start;
+    row-gap: 1rem;
+    column-gap: 2rem;
+}
+
+.filter-container .filter {
+    grid-area: filter;
+}
+
+.filter-container .sort {
+    grid-area: sort;
+}
+
+.filter-container .btn-submit {
+    grid-area: submit;
+    place-self: center;
+}
+
+.filter-container .btn-clear {
+    grid-area: clear;
+    place-self: center;
+}
+
+
+
+
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 2rem 0rem;
+}
+
+.card-container .card {
+    max-width: 400px;
+    background-color: var(--bg-color-2);
+    flex-grow: 1;
+
+    display: grid;
+    border-radius: 0.5rem;
+}
+
+
+.card .img-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    overflow: hidden;
+    background-color: var(--text-color-1);
+    flex-shrink: 0;
+    border-radius: 0.5rem 0.5rem 0rem 0rem;
+}
+
+.card .img-container img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    transform: translate(-50%, -50%);
+}
+
+.card .info-container {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem;
+}
+
+.card .info-container .basic-info {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    gap: 1rem;
+}
+
+.card .info-container .basic-info .label,
+.card .info-container .title,
+.card .info-container .price {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.card .user-interactions-container {
+    margin: 2rem 1rem 1rem;
+    display: grid;
+    grid-template-areas:
+        'view-details save'
+        'view-details share';
+    row-gap: 1rem;
+    place-self: end stretch;
+}
+
+.card .user-interactions-container button {
+    font-family: 'Blinker', sans-serif;
+    letter-spacing: 1px;
+    background-color: transparent;
+    color: var(--text-color-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.card .user-interactions-container button:hover {
+    cursor: pointer;
+}
+
+.card .user-interactions-container .user-interaction-2 {
+    border: var(--text-color-1) 2px solid;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem;
+}
+
+.card .user-interactions-container .save {
+    grid-area: save;
+    place-self: center end;
+}
+
+.card .user-interactions-container .share {
+    grid-area: share;
+    place-self: center end;
+}
+
+.card .user-interactions-container .view-details {
+    grid-area: view-details;
+    place-self: center start;
+}

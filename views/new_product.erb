@@ -1,0 +1,173 @@
+<div class="add_new_product_container">
+    <h1>Add new product</h1>
+
+    <form action="/admin/create_new_product" method="post" enctype="multipart/form-data" onsubmit="prepareFiles(event)" class="add-new-product">
+
+
+        <!-- Product type Field -->
+        <div class="part">
+            <label>Product type</label>
+            <input type="text" name="product_type">
+        </div>
+
+        <!-- Title Field -->
+        <div class="part">
+            <label>Title</label>
+            <input type="text" name="title">
+        </div>
+
+        <!-- Price Field -->
+        <div class="part">
+            <label>Price</label>
+            <input type="text" name="price">
+        </div>
+
+        <!-- Model year Field -->
+        <div class="part">
+            <label>Model year</label>
+            <input type="text" name="model_year">
+        </div>
+        
+        <!-- Brand Field -->
+        <div class="part">
+            <label>Brand</label>
+            <input type="text" name="brand">
+        </div>
+        
+        <!-- Fuel Field -->
+        <div class="part">
+            <label>Fuel</label>
+            <input type="text" name="fuel">
+        </div>
+       
+        <!-- Effect Field -->
+        <div class="part">
+            <label>Horse powers</label>
+            <input type="text" name="horse_power">
+        </div>
+        
+        <!-- Milage Field -->
+        <div class="part">
+            <label>Milage in km</label>
+            <input type="text" name="milage_km">
+        </div>
+        
+        <!-- Exterior color Field -->
+        <div class="part">
+            <label>Exterior color</label>
+            <input type="text" name="exterior_color">
+        </div>
+        
+        <!-- Condition Field -->
+        <div class="part">
+            <label>Condition</label>
+            <input type="text" name="condition">
+        </div>
+
+        <!-- Description Field -->
+        <div class="part">
+            <label>Description</label>
+            <textarea class="textarea" name="description" rows="5"></textarea>
+        </div>
+
+
+        <!-- Image Upload Field -->
+        <div class="part">
+            <label for="images">Choose images:</label>
+            <input type="file" id="images" name="images[]" accept="image/*" multiple onchange="previewImages(event)">
+            <button type="button" onclick="removeAllImages()">Clear Images</button>
+            <div class="image-preview-container" id="imagePreviewContainer">
+                <!-- Image previews will be dynamically inserted here -->
+            </div>
+        </div>
+
+
+        <!-- Submit Button -->
+        <input type="submit" value="Submit" class="btn-1 btn-submit btn-color">
+    </form>
+</div>
+
+
+<script>
+    let fileArray = []; // To store selected files
+
+    function previewImages(event) {
+        const files = Array.from(event.target.files); // Convert FileList to array
+        const previewContainer = document.getElementById('imagePreviewContainer');
+
+        // Add files to custom array
+        fileArray.push(...files);
+
+        // Display each file in the preview container
+        files.forEach((file, index) => {
+            const reader = new FileReader();
+
+            // Create a preview element
+            const previewDiv = document.createElement('div');
+            previewDiv.classList.add('image-preview');
+
+            const img = document.createElement('img');
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-btn');
+            deleteButton.innerHTML = `
+                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='#000000' width='24' height='24'>
+                    <path d="M5 20a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8h2V6h-4V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2H3v2h2zM9 4h6v2H9zM8 8h9v12H7V8z"></path>
+                    <path d="M9 10h2v8H9zm4 0h2v8h-2z"></path>
+                </svg>
+            `;
+
+            // Add click event to delete button
+            deleteButton.onclick = () => {
+                fileArray.splice(index, 1); // Remove the file from the array
+                previewDiv.remove(); // Remove the preview
+            };
+
+            previewDiv.appendChild(img);
+            previewDiv.appendChild(deleteButton);
+            previewContainer.appendChild(previewDiv);
+
+            // Load the image preview
+            reader.onload = function (e) {
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        event.target.value = ''; // Clear the file input
+    }
+
+
+    function prepareFiles(event) {
+        const form = event.target; // The form element
+        const formData = new FormData(form);
+
+        // Ensure files from fileArray are appended to the formData
+        fileArray.forEach((file, index) => {
+            formData.append(`images[]`, file);
+        });
+
+        fetch(form.action, {
+            method: form.method,
+            body: formData,
+        })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url; // Redirect if needed
+                } else {
+                    return response.json();
+                }
+            })
+            .catch(error => {
+                console.error("Error submitting form:", error);
+            });
+
+        event.preventDefault(); // Prevent default form submission
+    }
+
+
+    function removeAllImages() {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        previewContainer.innerHTML = ''; // Clear all previews
+        fileArray = []; // Clear the file array
+    }
+</script>
