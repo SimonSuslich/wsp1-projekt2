@@ -126,6 +126,32 @@ class App < Sinatra::Base
         return result
     end
 
+    def prettyPrintPrice(price) 
+        str_price = price.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
+    end
+
+
+    get '/browse/:product_id' do |product_id|
+
+        @product = db.execute('SELECT * FROM products WHERE id = ?', product_id).first
+
+        @product[:formated_price] = prettyPrintPrice(@product["price"])
+
+        product_images = db.execute('SELECT image_path FROM product_images WHERE product_id = ?', product_id)
+
+        @product_images = []
+        p @product_images
+        product_images.each do |image_path| 
+            @product_images << image_path["image_path"]
+        end
+
+        p @product_images
+
+
+        erb(:"view_product")
+    end
+
+
     get '/admin' do
         erb(:"admin")
     end
@@ -171,7 +197,7 @@ class App < Sinatra::Base
             Array(params[:images]).each do |uploaded_file|
                 # Generate a unique filename
                 unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
-                filepath = "img/products/#{product_id}/#{unique_filename}" # Relative path
+                filepath = "/img/products/#{product_id}/#{unique_filename}" # Relative path
                 absolute_path = File.join("public", filepath) # Absolute path
         
                 # Save the file

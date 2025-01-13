@@ -136,6 +136,16 @@ nav ul li a:hover {
     color: var(--bg-color-1);
 }
 
+.btn-2 {
+    background-color: var(--bg-color-1);
+    border: var(--text-color-1) 1px solid;
+    color: var(--text-color-1);
+    font-family: 'Blinker', sans-serif;
+    padding: 1rem 2rem;
+    font-weight: 400;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
 
 
 .btn-expand:hover {
@@ -333,14 +343,6 @@ form select option {
 
 
 
-
-
-
-
-
-
-
-
 footer {
     padding: 88px 10% 2rem;
     height: auto;
@@ -423,8 +425,8 @@ footer .social-medias .container .social-media-link svg {
 }
 
 footer .social-medias .container .social-media-link svg:hover {
-    fill: var(--text-color-1);
-    border-color: var(--text-color-1);
+    fill: var(--main-color-1);
+    border-color: var(--main-color-1);
 }
 
 footer .copyright {
