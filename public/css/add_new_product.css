@@ -15,15 +15,28 @@
 
 .add_new_product_container {
     display: grid;
+    place-self: center;
+    row-gap: 1rem;
+    max-width: 800px;
+    min-width: 500px;
+    text-align: center;
 }
 
 .add_new_product_container form {
     display: grid;
     row-gap: 1rem;
+
+    text-align: start;
+    display: grid;
+    row-gap: 2rem;
+    background-color: var(--bg-color-2);
+    padding: 1rem;
+    border-radius: 0.5rem;
 }
 
 .add_new_product_container form .part {
     display: grid;
+    row-gap: 0.25rem;
 }
 
 

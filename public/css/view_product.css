@@ -234,7 +234,6 @@ section.view-product .product-info-container {
 }
 
 .product-info-container .purchase-controlls button svg {
-    fill: var(--text-color-1);
     width: 24px;
     height: 24px;
 }
@@ -257,7 +256,7 @@ section.view-product .product-description-container {
     transition: 0.5s ease-in-out;
 }
 
-.product-description-container .description-buttons-container {
+.description-buttons-container {
     display: flex;
     justify-content: center;
     align-items: center;

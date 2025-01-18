@@ -145,8 +145,23 @@ nav ul li a:hover {
     font-weight: 400;
     font-size: 1.5rem;
     cursor: pointer;
+    transition: 0.15s ease-in-out;
 }
 
+.btn-2 svg {
+    transition: fill 0.15s ease-in-out;
+    fill: var(--text-color-1);
+
+}
+
+.btn-2:hover {
+    color: var(--bg-color-1);
+    background-color: var(--text-color-1);
+}
+
+.btn-2:hover svg {
+    fill: var(--bg-color-1);
+}
 
 .btn-expand:hover {
     padding: 0.25rem 1rem;

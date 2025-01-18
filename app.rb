@@ -96,7 +96,7 @@ class App < Sinatra::Base
 
         @all_products.each do |product|
             basic_info = []
-            banned_key = ["title", "product_type", "description", "id", "price", "image_path"]
+            banned_key = ["title", "product_type", "description", "id", "price", "image_path", :formated_price]
 
             product.each do |key, value|
                 if !banned_key.include?(key) && value.to_s != ""
@@ -110,6 +110,8 @@ class App < Sinatra::Base
             end
 
             product[:basic_info] = basic_info
+            product[:formated_price] = prettyPrintPrice(product["price"])
+
 
         end
 
@@ -118,7 +120,6 @@ class App < Sinatra::Base
 
 
     def prettyPrintKey(str)
-        # Split, capitalize the first word, and downcase the rest
         result = str.split('_').map.with_index { |word, index| 
             index == 0 ? word.capitalize : word.downcase
         }.join(' ')
@@ -145,10 +146,33 @@ class App < Sinatra::Base
             @product_images << image_path["image_path"]
         end
 
-        p @product_images
+        @basic_info = []
+        banned_key = ["title", "product_type", "description", "id", "price", "image_path", :formated_price]
+
+        @product.each do |key, value|
+            if !banned_key.include?(key) && value.to_s != ""
+                element = {
+                    header: prettyPrintKey(key),
+                    value: value
+                }
+                @basic_info << element
+
+            end
+        end
 
 
         erb(:"view_product")
+    end
+
+
+    get '/log_in' do
+        erb(:"log_in")
+
+    end
+
+    get '/sign_up' do
+        erb(:"sign_up")
+
     end
 
 
