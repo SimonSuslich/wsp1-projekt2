@@ -12,6 +12,7 @@ class Seeder
     db.execute('DROP TABLE IF EXISTS product_images')
     db.execute('DROP TABLE IF EXISTS sales')
     db.execute('DROP TABLE IF EXISTS users')
+    db.execute('DROP TABLE IF EXISTS cart')
   end
 
   def self.create_tables
@@ -40,6 +41,11 @@ class Seeder
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 password TEXT NOT NULL)')
+    db.execute('CREATE TABLE cart (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                product_id INTEGER NOT NULL
+                )')
   end
 
 

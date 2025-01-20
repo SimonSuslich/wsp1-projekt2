@@ -1,0 +1,140 @@
+:root {
+    /* COLOR */
+    --main-color-1: #7c038c;
+    --main-color-2: #4F0259;
+    --main-color-3: #380140;
+    --bg-color-1: #0D0D0D;
+    --bg-color-2: #1E0126;
+    --text-color-1: #f2f2f2;
+    --text-color-2: #bbbbbb;
+
+    /* Z-INDEX */
+    --z-index-header: 3;
+    --z-index-menu: 2;
+}
+
+.cart-section {
+    display: grid;
+    gap: 2rem;
+}
+
+.cart-container {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    column-gap: 2rem;
+}
+
+.product-container {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: auto;
+    gap: 2rem;
+    height: min-content;
+}
+
+.product-container .product {
+    height: auto;
+    background-color: var(--main-color-2);
+    display: grid;
+    grid-template-columns: 30% auto;
+}
+
+.product a {
+    color: var(--text-color-1);
+}
+
+.product .product-image-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background-color: var(--text-color-1);
+    overflow: hidden;
+}
+
+
+.product .product-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product .product-info-container {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: auto auto;
+
+}
+
+.product-info-container .title {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.product-controlls .remove-button-1 {
+    background-color: var(--text-color-1);
+    display: grid;
+    place-self: start end;
+    padding: 0.25rem;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.remove-button-2 {
+    background-color: transparent;
+}
+
+.remove-button-1 svg {
+    fill: var(--main-color-2);
+}
+
+.remove-button-2 svg {
+    fill: var(--text-color-1);
+}
+
+
+.checkout-container {
+    background-color: var(--main-color-2);
+    display: grid;
+    padding: 1rem;
+    gap: 1rem;
+    height: min-content;
+}
+
+.checkout-container .overview {
+    display: grid;
+    gap: 1rem;
+
+}
+
+.overview .product-part {
+    display: grid;
+    gap: 1rem;
+}
+
+.product-part .product-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-color-1);
+    text-decoration: underline;
+}
+
+.overview .part {
+    display: flex;
+    justify-content: space-between;
+}
+
+.total-cost-part {
+    border-top: 0.125rem dotted var(--text-color-1);
+    padding: 1rem 0;
+}
+
+
+.keep-shopping-btn {
+    display: grid;
+    place-self: center;
+    color: var(--text-color-2);
+    text-decoration: underline;
+}

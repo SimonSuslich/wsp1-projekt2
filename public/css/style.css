@@ -117,12 +117,14 @@ nav ul li a:hover {
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-}
-
-.user-controlls-container .buttons svg:hover {
     cursor: pointer;
+
 }
 
+.user-controlls-container a svg {
+    display: grid;
+    place-content: center;
+}
 
 .btn-1 {
     border-radius: 0.5rem;

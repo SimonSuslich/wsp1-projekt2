@@ -1,0 +1,90 @@
+<head>
+    <link rel="stylesheet" href="/css/cart.css?<%=Time.now.to_i%>">
+</head>
+
+<section class="cart-section">
+            <h1 class="header">Your cart</h1>
+            <div class="cart-container">
+                <div class="product-container">
+                    <div class="product">
+                        <a class="product-image-container" href="/product.html">
+                            <img src="/img/products/car1.webp" alt="">
+                        </a>
+                        <div class="product-info-container">
+                            <a href="/product.html">
+                                <p class="title">Porsche Taycan or whatever</p>
+                                <p class="price">1 000 000 SEK</p>
+                            </a>
+
+                            <div class="product-controlls">
+                                <button class="remove-button-1">
+                                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
+                                        <path
+                                            d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="checkout-container">
+                    <h2>Summary</h2>
+                    <div class="overview">
+                        <div class="product-part">
+                            <div class="part">
+
+                                <a class="product-name" href="/product.html">Porsche Taycan whatever</a>
+
+                                <button class="remove-button-2">
+                                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
+                                        <path
+                                            d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="part">
+                                <p class="label">
+                                    Price exc. tax
+                                </p>
+                                <p class="info">
+                                    900 000 SEK
+                                </p>
+                            </div>
+                            <div class="part">
+                                <p class="label">
+                                    Tax
+                                </p>
+                                <p class="info">
+                                    100 000 SEK
+                                </p>
+                            </div>
+                            <div class="part">
+                                <p class="label">
+                                    Shipping
+                                </p>
+                                <p class="info">
+                                    0 SEK
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="part total-cost-part">
+                            <p class="label">Total cost</p>
+                            <p class="info">1 000 000 SEK</p>
+                        </div>
+
+                    </div>
+
+                    <button class="btn-1">Checkout</button>
+                </div>
+            </div>
+
+            <a href="/browse.html" class="keep-shopping-btn">Keep shopping</a>
+
+        </section>

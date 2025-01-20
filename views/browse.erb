@@ -1,3 +1,8 @@
+<head>
+    <link rel="stylesheet" href="/css/browse.css?<%=Time.now.to_i%>">
+</head>
+
+
 
 <section class="browse">
     <div class="filter-container">
@@ -62,7 +67,7 @@
 
                 <div class="card">
                     <div class="img-container">
-                        <img src="<%= product["image_path"].first%>" alt="<%= product["title"]%>">
+                        <img src="<%= product["image_paths"].first%>" alt="<%= product["title"]%>">
                     </div>
                     <div class="info-container">
                         <p class="title"><%= product["title"]%></p>
@@ -113,7 +118,6 @@
                         </a>
                     </div>
                 </div>
-
 
 
 

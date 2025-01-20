@@ -1,0 +1,38 @@
+<head>
+    <link rel="stylesheet" href="/css/admin_products_view.css?<%=Time.now.to_i%>">
+</head>
+
+<section class="admin-products"> 
+    <div class="product-container">
+
+        <% @all_products.each do |product|%>
+            <div class="product">
+                <a class="product-image-container" href="/product.html">
+                    <img src="<%= product['image_path'].first%>" alt="">
+                </a>
+                <div class="product-info-container">
+                    <a href="/product.html">
+                        <p class="title"><%= product['title']%></p>
+                        <p class="price"><%= product[:formated_price]%> SEK</p>
+                    </a>
+
+                    <div class="product-controlls">
+
+
+                        <a href="/admin/<%= product['id']%>/edit">
+                            Edit
+                        </a>
+                        <a href="/browse/<%= product['id'] %>">
+                            View
+                        </a>
+                        <form action="/admin/<%= product['id']%>/delete" method="POST">
+                            <input type="submit" value="Delete" class="">
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        <% end %>
+
+    </div>
+</section>

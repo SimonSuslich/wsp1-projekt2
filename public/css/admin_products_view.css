@@ -1,0 +1,92 @@
+:root {
+    /* COLOR */
+    --main-color-1: #7c038c;
+    --main-color-2: #4F0259;
+    --main-color-3: #380140;
+    --bg-color-1: #0D0D0D;
+    --bg-color-2: #1E0126;
+    --text-color-1: #f2f2f2;
+    --text-color-2: #bbbbbb;
+
+    /* Z-INDEX */
+    --z-index-header: 3;
+    --z-index-menu: 2;
+}
+
+
+
+.product-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    height: min-content;
+}
+
+.product-container .product {
+    height: auto;
+    background-color: var(--bg-color-2);
+    display: grid;
+    grid-template-rows: auto auto;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.product a {
+    color: var(--text-color-1);
+}
+
+.product .product-image-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background-color: var(--text-color-1);
+    overflow: hidden;
+}
+
+
+.product .product-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product .product-info-container {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: auto;
+    gap: 1rem;
+
+}
+
+.product-info-container .title {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.product-controlls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+.product-controlls form input,
+.product-controlls a {
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-color-1);
+    background-color: transparent;
+    font-family: 'Blinker', sans-serif;
+    transition: color 0.15s ease-in-out;
+
+}
+
+.product-controlls form input:hover,
+.product-controlls a:hover {
+    color: var(--text-color-2);
+}

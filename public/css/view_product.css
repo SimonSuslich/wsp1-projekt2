@@ -44,7 +44,7 @@ section.view-product .product-gallery {
     position: relative;
     width: 100%;
     padding-bottom: 56.25%;
-    background-color: var(--text-color-1);
+    background-color: var(--bg-color-1);
     overflow: hidden;
 }
 

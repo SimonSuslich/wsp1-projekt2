@@ -40,6 +40,9 @@
 }
 
 
+.add_new_product_container form .part.upload-images-part {
+    display: grid;
+}
 
 
 .image-preview-container {

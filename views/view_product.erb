@@ -1,12 +1,14 @@
+<head>
+    <link rel="stylesheet" href="/css/view_product.css?<%=Time.now.to_i%>">
+</head>
+
+
 <section class="view-product">
-
-
-
     <div class="product-gallery">
         <div class="main-image">
             <button class="nav-button prev" onclick="prevImage()">&#10094;</button>
             <div class="image-container">
-                <img id="currentImage" src="<%= @product_images.first %>" alt="Main product image">
+                <img id="currentImage" src="<%= @product['image_paths'].first %>" alt="Main product image">
             </div>
             <button class="nav-button next" onclick="nextImage()">&#10095;</button>
         </div>
@@ -14,7 +16,7 @@
             <button class="thumbnail-nav prev" onclick="scrollThumbnails(-1)">&#10094;</button>
             <div class="thumbnail-container">
 
-                <% @product_images.each_with_index do |image, i| %>
+                <% @product['image_paths'].each_with_index do |image, i| %>
                     <img class="thumbnail" src="<%= image %>"
                         onclick="changeImage('<%= image %>', <%= i %>)" alt="Thumbnail 1">
                     <!-- Add more thumbnails as needed -->
@@ -36,9 +38,9 @@
         <div class="overview-container">
             <p class="overview">Overview</p>
             <ul class="info-container">
-                <% @basic_info.each do |info| %>
+                <% @product[:basic_info].each do |info| %>
                     <li>
-                        <p class="label"><%=  info[:header]%></p>
+                        <p class="label"><%= info[:header]%></p>
                         <p class="info"><%= info[:value]%></p>
                     </li>
                 <% end %>
@@ -91,7 +93,7 @@
 </section>
 <script>
     // Array of image URLs
-    const images = <%= @product_images%>;
+    const images = <%= @product['image_paths']%>;
     let currentIndex = 0;
 
     // Function to change the main image

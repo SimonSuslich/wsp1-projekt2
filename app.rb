@@ -1,6 +1,6 @@
 require 'securerandom'
 require 'sinatra'
-require 'fileutils' # For creating directories
+require 'fileutils'
 
 
 class App < Sinatra::Base
@@ -19,15 +19,13 @@ class App < Sinatra::Base
     end
 
 
-    def clear_products_folder
-        folder_path = "public/img/products"
-    
+    def clear_products_folder(folder_path="public/img/products")
         if Dir.exist?(folder_path)
-        # Remove all contents (files and subfolders)
-        FileUtils.rm_rf(Dir.glob("#{folder_path}/*"))
-        puts "Cleared all contents of the products folder."
+            # Remove all contents (files and subfolders)
+            FileUtils.rm_rf(Dir.glob("#{folder_path}/*"))
+            puts "Cleared all contents of the products folder."
         else
-        puts "The products folder does not exist."
+            puts "The products folder does not exist."
         end
     end
     
@@ -47,11 +45,6 @@ class App < Sinatra::Base
         end
     end
 
-
-
-
-
-
     
     get '/' do
         erb(:"index")
@@ -59,66 +52,33 @@ class App < Sinatra::Base
 
 
 
-    get '/admin/delete_all_images' do
-        clear_products_folder()
-        redirect("/admin")
-    end
 
+    # BROWSE
 
     get '/browse' do
-
-        all_products = db.execute("SELECT products.id, products.title, products.description, products.brand, products.price, products.model_year, products.fuel, products.horse_power, products.milage_km, products.exterior_color, products.product_type, products.condition, product_images.image_path
-            FROM products
-                INNER JOIN product_images
-                ON products.id = product_images.product_id")
-
-
-        @all_products = []
-
-        all_products.each_with_index do |product, i|
-            element_exists = false
-            @all_products.each do |element|
-                element['id'] == product['id'] ? element_exists = true : nil
-            end 
-
-            if element_exists
-                @all_products.each do |arr_product|
-                    if arr_product['id'] == product['id']
-                        arr_product['image_path'] << product['image_path']
-                    end
-                end
-            else
-                product['image_path'] = [product['image_path']]
-                @all_products << product
-            end
-        end
-
+        @all_products =  select_products_and_combine_images()
 
         @all_products.each do |product|
-            basic_info = []
-            banned_key = ["title", "product_type", "description", "id", "price", "image_path", :formated_price]
-
-            product.each do |key, value|
-                if !banned_key.include?(key) && value.to_s != ""
-                    element = {
-                        header: prettyPrintKey(key),
-                        value: value
-                    }
-                    basic_info << element
-
-                end
-            end
-
-            product[:basic_info] = basic_info
-            product[:formated_price] = prettyPrintPrice(product["price"])
-
-
+            format_product_info(product)
+            product[:formated_price] = prettyPrintPrice(product['price'])
         end
 
         erb(:"browse")
     end
 
+    get '/browse/:product_id' do |product_id|
+     
+        @product = select_products_and_combine_images(product_id).first
+        @product[:formated_price] = prettyPrintPrice(@product["price"])
+        format_product_info(@product)
 
+        erb(:"view_product")
+    end
+
+
+    # HELP METHODS FOR BROWSE
+
+    
     def prettyPrintKey(str)
         result = str.split('_').map.with_index { |word, index| 
             index == 0 ? word.capitalize : word.downcase
@@ -131,39 +91,66 @@ class App < Sinatra::Base
         str_price = price.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
     end
 
+    def select_products_and_combine_images(product_id = nil)
 
-    get '/browse/:product_id' do |product_id|
+        sqlPrompt = 'SELECT 
+                products.id, 
+                products.product_type, 
+                products.title, 
+                products.price, 
+                products.model_year, 
+                products.brand, 
+                products.fuel, 
+                products.horse_power, 
+                products.milage_km, 
+                products.exterior_color, 
+                products.condition, 
+                products.description, 
 
-        @product = db.execute('SELECT * FROM products WHERE id = ?', product_id).first
+                GROUP_CONCAT(product_images.image_path) AS image_paths
+            FROM 
+                products
+            INNER JOIN 
+                product_images 
+            ON 
+                products.id = product_images.product_id
+            '
 
-        @product[:formated_price] = prettyPrintPrice(@product["price"])
-
-        product_images = db.execute('SELECT image_path FROM product_images WHERE product_id = ?', product_id)
-
-        @product_images = []
-        p @product_images
-        product_images.each do |image_path| 
-            @product_images << image_path["image_path"]
+        if product_id
+            sqlPrompt << "WHERE products.id=#{product_id}"
         end
 
-        @basic_info = []
-        banned_key = ["title", "product_type", "description", "id", "price", "image_path", :formated_price]
+        sqlPrompt << "            GROUP BY 
+        products.id"
 
-        @product.each do |key, value|
+        all_products = db.execute(sqlPrompt)
+
+        all_products.each do |product|
+            product['image_paths'] = product['image_paths'].split(',')
+        end
+
+    end
+
+    def format_product_info(product)
+        banned_key = ["title", "product_type", "description", "id", "price", "image_paths", :formated_price, :basic_info]
+
+        product[:basic_info] = []
+
+        p product
+        product.each do |key, value|
+            p key
             if !banned_key.include?(key) && value.to_s != ""
-                element = {
+                product[:basic_info]<<{
                     header: prettyPrintKey(key),
                     value: value
                 }
-                @basic_info << element
-
             end
         end
-
-
-        erb(:"view_product")
     end
 
+
+
+    # USER LOG IN AND SIGN UP
 
     get '/log_in' do
         erb(:"log_in")
@@ -176,8 +163,30 @@ class App < Sinatra::Base
     end
 
 
+    # USER CART
+
+    get '/user/cart' do 
+
+        erb(:"cart")
+    end
+
+
+
+
+
+
+
+# ADMIN CRUD
+
+
     get '/admin' do
         erb(:"admin")
+    end
+
+
+    get '/admin/delete_all_images' do
+        clear_products_folder()
+        redirect("/admin")
     end
 
 
@@ -237,6 +246,62 @@ class App < Sinatra::Base
         # Redirect back to the admin page
         redirect("/admin")
     end 
+
+    get '/admin/products' do 
+        all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
+            FROM products
+                INNER JOIN product_images
+                ON products.id = product_images.product_id")
+
+
+        @all_products = []
+
+        all_products.each_with_index do |product, i|
+            element_exists = false
+            @all_products.each do |element|
+                element['id'] == product['id'] ? element_exists = true : nil
+            end 
+
+            if element_exists
+                @all_products.each do |arr_product|
+                    if arr_product['id'] == product['id']
+                        arr_product['image_path'] << product['image_path']
+                    end
+                end
+            else
+                product['image_path'] = [product['image_path']]
+                @all_products << product
+            end
+
+            product[:formatked_price] = prettyPrintPrice(product["price"])
+        end
+
+        erb(:"admin_products")
+    end
+
+
+    post "/admin/:id/delete" do |id|
+        db.execute('DELETE FROM products WHERE id=?', id)
+        db.execute('DELETE FROM product_images WHERE product_id=?', id)
+        db.execute('DELETE FROM cart WHERE product_id=?', id)
+
+        folder_path = "public/img/products/#{id}"
+        FileUtils.rm_rf(folder_path)
+        redirect("/admin/products")
+    end
+
+
+    get "/admin/:id/edit" do |id|
+
+        @product = select_products_and_combine_images(id).first
+
+        p @product
+
+        erb(:"edit")
+
+    end
+
+
       
 
 end
