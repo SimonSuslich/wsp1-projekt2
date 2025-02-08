@@ -76,18 +76,22 @@
 
 
         <div class="part upload-images-part">
-            <label for="images">Choose images:</label>
+            <label for="images-input" class="btn-1 btn-color">Choose images</label>
 
-            <input type="file" id="images" name="images[]" accept="image/*" multiple style="display: none;" onchange="previewImages(event)">
+            <input type="file" name="new_images[]" id="images-input" accept="image/*" multiple style="display: none;">
 
-            <button type="button" id="customButton" class="btn-1 btn-color">Choose Files</button>
+            <input name="images_order[]" type="text" multiple id="images-order" style="display: none;">
 
-            <button type="button" onclick="removeAllImages()" class="btn-1 btn-color">Clear Images</button>
+
+
+            <button type="button" class="btn-1 btn-color" onclick="removeAllImages()">Clear Images</button>
 
             <div class="image-preview-container" id="imagePreviewContainer">
+
             </div>
 
         </div>
+
 
 
         <!-- Submit Button -->
@@ -96,38 +100,37 @@
 </div>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+
 <script>
+   
+    const inputImages = document.getElementById("images-input");
+    let imagesPreviewContainer = document.getElementById("imagePreviewContainer");
+
+    let imagesArray = [];
+    let imagesOrder = [];
+    let idCounter = 0;
 
 
-        // Reference the file input and custom button
-    const fileInput = document.getElementById("images");
-    const customButton = document.getElementById("customButton");
-    const fileNamesDiv = document.getElementById("fileNames");
+    inputImages.onchange = function(event) {
+        const files = Array.from(event.target.files);
 
-    // When the custom button is clicked, trigger the file input click
-    customButton.addEventListener("click", () => {
-        fileInput.click();
-    });
 
-    let fileArray = []; // To store selected files
-
-    function previewImages(event) {
-        const files = Array.from(event.target.files); // Convert FileList to array
-        const previewContainer = document.getElementById('imagePreviewContainer');
-
-        // Add files to custom array
-        fileArray.push(...files);
-
-        // Display each file in the preview container
+        imagesArray.push(...files);
         files.forEach((file, index) => {
-            const reader = new FileReader();
+            imagesOrder.push([file.name, idCounter]);
 
-            // Create a preview element
             const previewDiv = document.createElement('div');
             previewDiv.classList.add('image-preview');
 
             const img = document.createElement('img');
+            img.classList.add('draggable');
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+
             const deleteButton = document.createElement('button');
+            deleteButton.id = idCounter;
+            idCounter++;
             deleteButton.classList.add('delete-btn');
             deleteButton.innerHTML = `
                 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='#000000' width='24' height='24'>
@@ -136,58 +139,75 @@
                 </svg>
             `;
 
-            // Add click event to delete button
             deleteButton.onclick = () => {
-                fileArray.splice(index, 1); // Remove the file from the array
-                previewDiv.remove(); // Remove the preview
+                imagesArray.splice(index, 1);
+                imagesOrder = imagesOrder.filter(item => Number(item[1]) !== Number(deleteButton.id));
+                previewDiv.remove();
+                console.log(imagesOrder);
             };
 
             previewDiv.appendChild(img);
             previewDiv.appendChild(deleteButton);
-            previewContainer.appendChild(previewDiv);
-
-            // Load the image preview
-            reader.onload = function (e) {
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            imagesPreviewContainer.appendChild(previewDiv);
         });
-
-        event.target.value = ''; // Clear the file input
     }
 
 
-    function prepareFiles(event) {
-        const form = event.target; // The form element
-        const formData = new FormData(form);
-
-        // Ensure files from fileArray are appended to the formData
-        fileArray.forEach((file, index) => {
-            formData.append(`images[]`, file);
-        });
-
-        fetch(form.action, {
-            method: form.method,
-            body: formData,
-        })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url; // Redirect if needed
-                } else {
-                    return response.json();
-                }
-            })
-            .catch(error => {
-                console.error("Error submitting form:", error);
-            });
-
-        event.preventDefault(); // Prevent default form submission
-    }
 
 
     function removeAllImages() {
         const previewContainer = document.getElementById('imagePreviewContainer');
-        previewContainer.innerHTML = ''; // Clear all previews
-        fileArray = []; // Clear the file array
+        previewContainer.innerHTML = '';
+        imagesArray = [];
+        imagesOrder = [];
     }
+
+
+    function prepareFiles(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Append image order as a comma-separated string
+        formData.set("images_order", imagesOrder.join(",")); 
+
+        // Clear previous "new_images" entries by ensuring nothing is pre-existing
+        formData.delete("new_images[]"); 
+
+        // Append all images from imagesArray
+        imagesArray.forEach((file) => {
+            formData.append("new_images[]", file);
+        });
+
+        // Submit the form using fetch
+        fetch(form.action, {
+            method: form.method,
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = response.url; // Redirect on success
+            } else {
+                console.error("Form submission failed");
+            }
+        }).catch(error => console.error("Error:", error));
+    }
+
+
+
+
+    new Sortable(imagesPreviewContainer, {
+        animation: 150,
+        onEnd: function (event) {
+            // Reorder the imagesArray based on the new order in the container
+            imagesOrder = [...imagesPreviewContainer.children].map((div) => {
+                return div.querySelector('img').alt;
+            });
+
+            console.log("Updated Array:", imagesOrder); // Show the updated order
+            imagesArray.sort((a, b) => imagesOrder.indexOf(a.name) - imagesOrder.indexOf(b.name));
+
+            console.log(imagesArray)
+        }
+    });
 </script>

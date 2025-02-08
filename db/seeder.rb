@@ -32,7 +32,8 @@ class Seeder
     db.execute('CREATE TABLE product_images (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 product_id INTEGER NOT NULL,
-                image_path TEXT NOT NULL)')
+                image_path TEXT NOT NULL,
+                image_order INTEGER NOT NULL)')
     db.execute('CREATE TABLE sales (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 todo_id INTEGER,

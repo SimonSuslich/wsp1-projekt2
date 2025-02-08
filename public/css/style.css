@@ -136,6 +136,7 @@ nav ul li a:hover {
     background-color: var(--text-color-1);
     border: var(--text-color-1) 2px solid;
     color: var(--bg-color-1);
+    text-align: center;
 }
 
 .btn-2 {

@@ -51,8 +51,6 @@ class App < Sinatra::Base
     end
 
 
-
-
     # BROWSE
 
     get '/browse' do
@@ -60,7 +58,7 @@ class App < Sinatra::Base
 
         @all_products.each do |product|
             format_product_info(product)
-            product[:formated_price] = prettyPrintPrice(product['price'])
+            product[:formated_price] = pretty_print_price(product['price'])
         end
 
         erb(:"browse")
@@ -69,7 +67,7 @@ class App < Sinatra::Base
     get '/browse/:product_id' do |product_id|
      
         @product = select_products_and_combine_images(product_id).first
-        @product[:formated_price] = prettyPrintPrice(@product["price"])
+        @product[:formated_price] = pretty_print_price(@product["price"])
         format_product_info(@product)
 
         erb(:"view_product")
@@ -79,7 +77,7 @@ class App < Sinatra::Base
     # HELP METHODS FOR BROWSE
 
     
-    def prettyPrintKey(str)
+    def pretty_print_key(str)
         result = str.split('_').map.with_index { |word, index| 
             index == 0 ? word.capitalize : word.downcase
         }.join(' ')
@@ -87,7 +85,7 @@ class App < Sinatra::Base
         return result
     end
 
-    def prettyPrintPrice(price) 
+    def pretty_print_price(price) 
         str_price = price.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
     end
 
@@ -107,7 +105,7 @@ class App < Sinatra::Base
                 products.condition, 
                 products.description, 
 
-                GROUP_CONCAT(product_images.image_path) AS image_paths
+                GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
             FROM 
                 products
             INNER JOIN 
@@ -136,12 +134,10 @@ class App < Sinatra::Base
 
         product[:basic_info] = []
 
-        p product
         product.each do |key, value|
-            p key
             if !banned_key.include?(key) && value.to_s != ""
                 product[:basic_info]<<{
-                    header: prettyPrintKey(key),
+                    header: pretty_print_key(key),
                     value: value
                 }
             end
@@ -219,39 +215,20 @@ class App < Sinatra::Base
       
         # Get the product ID for the uploaded images
         product_id = db.last_insert_row_id
-      
-        # Ensure the product folder exists
-        product_folder = "public/img/products/#{product_id}"
-        FileUtils.mkdir_p(product_folder)
-      
-        # Handle uploaded images
-        if params[:images]
-            # Process each uploaded file
-            Array(params[:images]).each do |uploaded_file|
-                # Generate a unique filename
-                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
-                filepath = "/img/products/#{product_id}/#{unique_filename}" # Relative path
-                absolute_path = File.join("public", filepath) # Absolute path
-        
-                # Save the file
-                File.open(absolute_path, 'wb') do |file|
-                file.write(uploaded_file[:tempfile].read)
-                end
-        
-                # Save the file path in the database
-                db.execute("INSERT INTO product_images (product_id, image_path) VALUES (?, ?)", [product_id, filepath])
-            end
-        end
-      
+
+        store_new_product_images(params["new_images"], product_id)
+
         # Redirect back to the admin page
-        redirect("/admin")
+        redirect("/browse/#{product_id}")
     end 
+
 
     get '/admin/products' do 
         all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
             FROM products
                 INNER JOIN product_images
-                ON products.id = product_images.product_id")
+                ON products.id = product_images.product_id
+            ORDER BY product_images.image_order")
 
 
         @all_products = []
@@ -273,7 +250,7 @@ class App < Sinatra::Base
                 @all_products << product
             end
 
-            product[:formatked_price] = prettyPrintPrice(product["price"])
+            product[:formatked_price] = pretty_print_price(product["price"])
         end
 
         erb(:"admin_products")
@@ -282,22 +259,116 @@ class App < Sinatra::Base
 
     post "/admin/:id/delete" do |id|
         db.execute('DELETE FROM products WHERE id=?', id)
-        db.execute('DELETE FROM product_images WHERE product_id=?', id)
         db.execute('DELETE FROM cart WHERE product_id=?', id)
+        remove_product_image_folder(id)
 
-        folder_path = "public/img/products/#{id}"
-        FileUtils.rm_rf(folder_path)
         redirect("/admin/products")
     end
 
+    def remove_product_image_folder(product_id)
+        db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
+        folder_path = "public/img/products/#{product_id}"
+        FileUtils.rm_rf(folder_path)
+    end
+
+    def store_new_product_images(images, product_id)
+
+        # Ensure the product folder exists
+        product_folder = "public/img/products/#{product_id}"
+        FileUtils.mkdir_p(product_folder)
+      
+        # Handle uploaded images
+        if images
+            # Process each uploaded file
+            Array(images).each_with_index do |uploaded_file, index|
+                # Generate a unique filename
+                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
+                filepath = "/img/products/#{product_id}/#{unique_filename}" # Relative path
+                absolute_path = File.join("public", filepath) # Absolute path
+        
+                # Save the file
+                File.open(absolute_path, 'wb') do |file|
+                    file.write(uploaded_file[:tempfile].read)
+                end
+                # Save the file path in the database
+                db.execute("INSERT INTO product_images (product_id, image_path, image_order) VALUES (?, ?, ?)", [product_id, filepath, index])
+            end
+        end
+    end
+
+
+    def sort_images_and_remove_rest(images_order, product_id)
+        all_images = db.execute("SELECT image_path, id FROM product_images WHERE product_id=?", product_id)
+    
+        # Extract meaningful names from image paths
+        all_images.each do |image|
+            image["img_name"] = image["image_path"].split("/")[-1].split("_")[1..-1].join("_")
+        end
+    
+        # Create a mutable list to track available images
+        available_images = all_images.dup
+    
+        # Find matching images while ensuring uniqueness
+        matching_images = images_order.map do |name|
+            match = available_images.find { |img| img["img_name"] == name }
+            available_images.delete(match) if match # Remove used match to prevent duplicates
+            match
+        end.compact
+    
+        # Get remaining non-matching images
+        non_matching_images = available_images
+    
+        puts "Matching Images: #{matching_images}"
+        puts "Non-matching Images: #{non_matching_images}"
+    
+        # Update image order
+        matching_images.each_with_index do |img, i|
+            db.execute("UPDATE product_images SET image_order=? WHERE id=?", [i, img['id']])
+        end
+    
+        # Remove unmatched images
+        non_matching_images.each do |img|
+            db.execute("DELETE FROM product_images WHERE id=?", img['id'])
+            FileUtils.rm("public#{img['image_path']}")
+        end
+    end
+    
 
     get "/admin/:id/edit" do |id|
 
         @product = select_products_and_combine_images(id).first
 
-        p @product
-
         erb(:"edit")
+
+    end
+
+    post "/admin/:id/update" do |id|
+
+        # Access form fields
+        title = params['title']
+        price = params['price']
+        product_type = params['product_type']
+        model_year = params['model_year']
+        brand = params['brand']
+        fuel = params['fuel']
+        horse_power = params['horse_power']
+        milage_km = params['milage_km']
+        exterior_color = params['exterior_color']
+        condition = params['condition']
+        description = params['description']
+
+        db.execute(
+            "UPDATE products SET title=?, description=?, price=?, model_year=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
+            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
+        )
+    
+
+        store_new_product_images(params['new_images'], id) if params['new_images']
+
+        sort_images_and_remove_rest(params[:images_order].split(","), id) if params[:images_order]
+    
+        redirect("/browse/#{id}")
+        
 
     end
 
