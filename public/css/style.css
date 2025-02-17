@@ -26,13 +26,17 @@
     scroll-behavior: smooth;
 }
 
+html {
+    width: 100vw;
+}
+
 body {
     background-color: var(--bg-color-1);
     color: var(--text-color-1);
     font-family: 'Blinker', sans-serif;
     letter-spacing: 1px;
     overflow-x: hidden;
-    height: 100vh;
+    min-width: 100vw;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -323,6 +327,7 @@ menu .user-controlls-container .buttons {
 
 main {
     padding: calc(80px + 2rem) 10% 2rem;
+
 }
 
 h1 {

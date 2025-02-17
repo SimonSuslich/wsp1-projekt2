@@ -58,6 +58,12 @@ class App < Sinatra::Base
     end
 
 
+
+    get '/about' do 
+        erb(:"about")
+    end
+
+
     # BROWSE
 
     get '/browse' do
@@ -165,17 +171,24 @@ class App < Sinatra::Base
 
     post '/log_in' do
         username = params['username']
+        user_email = params['user_email']
         cleartext_password = params['password'] 
       
 
         user = db.execute('SELECT * FROM users WHERE username = ?', username).first
+
+
+
+        if !user
+            user = db.execute('SELECT * FROM users WHERE user_email = ?', user_email).first
+        end
+
 
         if !user
             redirect("/error")
         end
       
         password_from_db = BCrypt::Password.new(user['password'])
-        p password_from_db
 
         if password_from_db == cleartext_password 
             session[:user_id] = user['id'] 
@@ -234,6 +247,13 @@ class App < Sinatra::Base
     get '/user/cart' do 
 
         erb(:"cart")
+    end
+
+    get '/add_to_cart/:product_id' do |product_id|
+        
+        db.execute("INSERT INTO cart (user_id, product_id) VALUES (?,?)", [session[:user_id], product_id])
+        
+        redirect("/user/cart")
     end
 
 
