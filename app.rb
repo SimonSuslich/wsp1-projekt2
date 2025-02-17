@@ -31,22 +31,29 @@ class App < Sinatra::Base
     
 
 
-    # configure do
-    #     enable :sessions
-    #     set :session_secret, SecureRandom.hex(64)
-    # end
+    configure do
+        enable :sessions
+        set :session_secret, SecureRandom.hex(64)
+    end
 
     
 
 
     def authenticated
         if !session[:user_id] 
-            redirect("/user")
+            redirect("/log_in")
+        end
+    end
+
+    def admin_authenticated
+        if !session[:admin_id]
+            redirect("/admin/log_in")
         end
     end
 
     
     get '/' do
+        authenticated()
         erb(:"index")
     end
 
@@ -148,14 +155,77 @@ class App < Sinatra::Base
 
     # USER LOG IN AND SIGN UP
 
+    get "/error" do 
+        erb(:"error")
+    end
+
     get '/log_in' do
         erb(:"log_in")
+    end
 
+    post '/log_in' do
+        username = params['username']
+        cleartext_password = params['password'] 
+      
+
+        user = db.execute('SELECT * FROM users WHERE username = ?', username).first
+
+        if !user
+            redirect("/error")
+        end
+      
+        password_from_db = BCrypt::Password.new(user['password'])
+        p password_from_db
+
+        if password_from_db == cleartext_password 
+            session[:user_id] = user['id'] 
+            redirect("/")
+        else
+            redirect("/error")
+
+        end 
     end
 
     get '/sign_up' do
         erb(:"sign_up")
+    end
 
+    post '/sign_up' do 
+        username = params['username']
+        user_email = params['user_email']
+        password = params['password']
+        confirm_password = params['confirm_password']
+
+
+        check_username(username)
+
+
+        if password != confirm_password
+            redirect("/error")
+        end
+
+
+        hashed_pasword = BCrypt::Password.create(password)
+
+        db.execute("INSERT INTO users (username, user_email, password) 
+            VALUES (?, ?, ?)
+            ", [username, user_email, hashed_pasword])
+
+        redirect("/")
+    end
+
+    def check_username(username)
+        username_list = db.execute("SELECT username FROM users WHERE username=?", username)
+
+        if !username_list.empty?
+            redirect("/error")
+        end
+
+    end
+
+    get '/log_out' do 
+        session.destroy
+        redirect("/")
     end
 
 
@@ -174,8 +244,32 @@ class App < Sinatra::Base
 
 # ADMIN CRUD
 
+    get '/admin/log_in' do 
+        erb(:"admin_log_in")
+    end
+
+    post '/admin/log_in' do 
+        username = params['username']
+        cleartext_password = params['password'] 
+
+        user = db.execute('SELECT * FROM admin WHERE name = ?', username).first
+
+        if !user
+            redirect("/error")
+        end
+      
+        password_from_db = BCrypt::Password.new(user['password'])
+
+        if password_from_db == cleartext_password 
+            session[:admin_id] = user['id'] 
+            redirect("/admin")
+        else
+            redirect("/error")
+        end 
+    end
 
     get '/admin' do
+        admin_authenticated()
         erb(:"admin")
     end
 
@@ -371,8 +465,5 @@ class App < Sinatra::Base
         
 
     end
-
-
-      
 
 end

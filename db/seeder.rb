@@ -5,6 +5,7 @@ class Seeder
   def self.seed!
     drop_tables
     create_tables
+    create_admin
   end
 
   def self.drop_tables
@@ -13,6 +14,7 @@ class Seeder
     db.execute('DROP TABLE IF EXISTS sales')
     db.execute('DROP TABLE IF EXISTS users')
     db.execute('DROP TABLE IF EXISTS cart')
+    db.execute('DROP TABLE IF EXISTS admin')
   end
 
   def self.create_tables
@@ -41,12 +43,22 @@ class Seeder
     db.execute('CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
+                user_email TEXT, 
                 password TEXT NOT NULL)')
     db.execute('CREATE TABLE cart (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 product_id INTEGER NOT NULL
                 )')
+    db.execute('CREATE TABLE admin (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                email TEXT,
+                password TEXT NOT NULL)')
+  end
+
+  def self.create_admin
+    db.execute('INSERT INTO admin (name, email, password) VALUES (?,?,?)', ["admin", "simonniklas.suslich@elev.ga.ntig.se", BCrypt::Password.create("admin")])
   end
 
 

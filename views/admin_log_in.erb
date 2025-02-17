@@ -3,15 +3,15 @@
 </head>
 
 <div class="log-in-container user-form-container">
-    <h1>Sign up</h1>
+    <h1>Admin log in</h1>
     <p>
-        Already have an account?
+        Return back to user log in?
         <a href="/log_in">Log in</a>
     </p>
 
 
 
-    <form action="/sign_up" method="post" class="register-form sign-up-form">
+    <form action="/admin/log_in" method="post" class="register-form log-in-form">
         <div class="part">
             <label>
                 User name
@@ -33,13 +33,6 @@
             <input type="password" name="password" class="text-input">
         </div>
 
-        <div class="part">
-            <label>
-                Confirm Password
-            </label>
-            <input type="password" name="confirm_password" class="text-input">
-        </div>
-
-        <input type="submit" value="Sign up" class="btn-1 btn-submit">
+        <input type="submit" value="Log in" class="btn-1 btn-submit">
     </form>
 </div>
