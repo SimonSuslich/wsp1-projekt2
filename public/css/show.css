@@ -57,6 +57,7 @@ section.view-product .product-gallery {
     object-fit: contain;
     opacity: 1;
     transition: opacity 0.15s ease-in-out;
+    border-radius: 1rem;
 }
 
 
@@ -80,8 +81,12 @@ section.view-product .product-gallery {
     padding: 10px;
     cursor: pointer;
     z-index: var(--z-index-buttons);
-    opacity: 1;
+    opacity: 0;
     transition: opacity 0.15s ease-in-out;
+}
+
+.main-image:hover .nav-button {
+    opacity: 1;
 }
 
 .nav-button:hover {
@@ -121,6 +126,7 @@ section.view-product .product-gallery {
     cursor: pointer;
     transition: border-color 0.3s;
     flex-shrink: 0;
+    border-radius: 0.5rem;
 }
 
 .thumbnail:hover,
@@ -138,20 +144,19 @@ section.view-product .product-gallery {
 
 
 .thumbnail-nav {
-    background-color: transparent;
-    color: transparent;
+    background-color: var(--bg-color-1);
+    color: var(--text-color-1);
     border: none;
     font-size: 18px;
     padding: 10px;
     cursor: pointer;
     z-index: var(--z-index-buttons);
     transition: 0.15s ease-in-out;
+    opacity: 0;
 }
 
 .thumbnail-container-wrapper:hover .thumbnail-nav {
-
-    background-color: var(--bg-color-1);
-    color: var(--text-color-1);
+    opacity: 1;
 }
 
 
@@ -199,6 +204,7 @@ section.view-product .product-info-container {
     padding: 1rem;
     display: grid;
     row-gap: 1rem;
+    border-radius: 1rem;
 }
 
 .overview-container .overview {

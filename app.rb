@@ -19,7 +19,7 @@ class App < Sinatra::Base
     end
 
 
-    def clear_products_folder(folder_path="public/img/products")
+    def clear_products_folder(folder_path="public/img/productss")
         if Dir.exist?(folder_path)
             # Remove all contents (files and subfolders)
             FileUtils.rm_rf(Dir.glob("#{folder_path}/*"))
@@ -64,9 +64,261 @@ class App < Sinatra::Base
     end
 
 
-    # BROWSE
 
-    get '/browse' do
+
+
+
+
+
+
+
+    # ADMIN CRUD
+
+    get '/admin/log_in' do 
+        erb(:"admin_log_in")
+    end
+
+    post '/admin/log_in' do 
+        user_name_email = params['user_name_email']
+        cleartext_password = params['password'] 
+
+        user = db.execute('SELECT * FROM admin WHERE name = ?', user_name_email).first
+
+        if !user
+            user = db.execute('SELECT * FROM admin WHERE email = ?', user_name_email).first
+        end
+
+        if !user
+            redirect("/error")
+        end
+    
+        password_from_db = BCrypt::Password.new(user['password'])
+
+        if password_from_db == cleartext_password 
+            session[:admin_id] = user['id'] 
+            redirect("/admin")
+        else
+            redirect("/error")
+        end 
+    end
+
+    get '/admin' do
+        admin_authenticated()
+        erb(:"admin")
+    end
+
+
+    get '/delete_all_images' do
+        admin_authenticated()
+
+        clear_products_folder()
+        redirect("/admin")
+    end
+
+
+    get '/products/new' do 
+        admin_authenticated()
+        erb(:"new")
+    end
+
+
+    post '/products' do 
+        admin_authenticated()
+
+        # Access form fields
+        title = params['title']
+        price = params['price']
+        product_type = params['product_type']
+        model_year = params['model_year']
+        brand = params['brand']
+        fuel = params['fuel']
+        horse_power = params['horse_power']
+        milage_km = params['milage_km']
+        exterior_color = params['exterior_color']
+        condition = params['condition']
+        description = params['description']
+    
+        # Insert product into the database
+        db.execute(
+            "INSERT INTO products (title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
+        )
+    
+        # Get the product ID for the uploaded images
+        product_id = db.last_insert_row_id
+
+        store_new_product_images(params["new_images"], product_id)
+
+        # Redirect back to the admin page
+        redirect("/products/#{product_id}")
+    end 
+
+
+    get '/products/admin' do 
+        admin_authenticated()
+        all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
+            FROM products
+                INNER JOIN product_images
+                ON products.id = product_images.product_id
+            ORDER BY product_images.image_order")
+
+
+        @all_products = []
+
+        all_products.each_with_index do |product, i|
+            element_exists = false
+            @all_products.each do |element|
+                element['id'] == product['id'] ? element_exists = true : nil
+            end 
+
+            if element_exists
+                @all_products.each do |arr_product|
+                    if arr_product['id'] == product['id']
+                        arr_product['image_path'] << product['image_path']
+                    end
+                end
+            else
+                product['image_path'] = [product['image_path']]
+                @all_products << product
+            end
+
+            product[:formatked_price] = pretty_print_price(product["price"])
+        end
+
+        erb(:"admin_products")
+    end
+
+
+    post "/products/:id/delete" do |id|
+        admin_authenticated()
+        db.execute('DELETE FROM products WHERE id=?', id)
+        db.execute('DELETE FROM cart WHERE product_id=?', id)
+        remove_product_image_folder(id)
+
+        redirect("/products/admin")
+    end
+
+    def remove_product_image_folder(product_id)
+        admin_authenticated()
+        db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
+        folder_path = "public/img/productss/#{product_id}"
+        FileUtils.rm_rf(folder_path)
+    end
+
+    def store_new_product_images(images, product_id)
+        admin_authenticated()
+
+        # Ensure the product folder exists
+        product_folder = "public/img/productss/#{product_id}"
+        FileUtils.mkdir_p(product_folder)
+    
+        # Handle uploaded images
+        if images
+            # Process each uploaded file
+            Array(images).each_with_index do |uploaded_file, index|
+                # Generate a unique filename
+                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
+                filepath = "/img/productss/#{product_id}/#{unique_filename}" # Relative path
+                absolute_path = File.join("public", filepath) # Absolute path
+        
+                # Save the file
+                File.open(absolute_path, 'wb') do |file|
+                    file.write(uploaded_file[:tempfile].read)
+                end
+                # Save the file path in the database
+                db.execute("INSERT INTO product_images (product_id, image_path, image_order) VALUES (?, ?, ?)", [product_id, filepath, index])
+            end
+        end
+    end
+
+
+    def sort_images_and_remove_rest(images_order, product_id)
+        admin_authenticated()
+        all_images = db.execute("SELECT image_path, id FROM product_images WHERE product_id=?", product_id)
+
+        # Extract meaningful names from image paths
+        all_images.each do |image|
+            image["img_name"] = image["image_path"].split("/")[-1].split("_")[1..-1].join("_")
+        end
+
+        # Create a mutable list to track available images
+        available_images = all_images.dup
+
+        # Find matching images while ensuring uniqueness
+        matching_images = images_order.map do |name|
+            match = available_images.find { |img| img["img_name"] == name }
+            available_images.delete(match) if match # Remove used match to prevent duplicates
+            match
+        end.compact
+
+        # Get remaining non-matching images
+        non_matching_images = available_images
+
+        puts "Matching Images: #{matching_images}"
+        puts "Non-matching Images: #{non_matching_images}"
+
+        # Update image order
+        matching_images.each_with_index do |img, i|
+            db.execute("UPDATE product_images SET image_order=? WHERE id=?", [i, img['id']])
+        end
+
+        # Remove unmatched images
+        non_matching_images.each do |img|
+            db.execute("DELETE FROM product_images WHERE id=?", img['id'])
+            FileUtils.rm("public#{img['image_path']}")
+        end
+    end
+
+
+    get "/products/:id/edit" do |id|
+        admin_authenticated()
+
+        @product = select_products_and_combine_images(id).first
+
+        erb(:"edit")
+
+    end
+
+    post "/products/:id/update" do |id|
+        admin_authenticated()
+
+        # Access form fields
+        title = params['title']
+        price = params['price']
+        product_type = params['product_type']
+        model_year = params['model_year']
+        brand = params['brand']
+        fuel = params['fuel']
+        horse_power = params['horse_power']
+        milage_km = params['milage_km']
+        exterior_color = params['exterior_color']
+        condition = params['condition']
+        description = params['description']
+
+        db.execute(
+            "UPDATE products SET title=?, description=?, price=?, model_year=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
+            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
+        )
+
+
+        store_new_product_images(params['new_images'], id) if params['new_images']
+
+        sort_images_and_remove_rest(params[:images_order].split(","), id) if params[:images_order]
+
+        redirect("/products/#{id}")
+        
+
+    end
+
+
+
+
+
+
+    # products
+
+    get '/products' do
         @all_products =  select_products_and_combine_images()
 
         @all_products.each do |product|
@@ -74,22 +326,20 @@ class App < Sinatra::Base
             product[:formated_price] = pretty_print_price(product['price'])
         end
 
-        erb(:"browse")
+        erb(:"products")
     end
 
-    get '/browse/:product_id' do |product_id|
-     
+    get '/products/:product_id' do |product_id|
         @product = select_products_and_combine_images(product_id).first
         @product[:formated_price] = pretty_print_price(@product["price"])
         format_product_info(@product)
 
-        erb(:"view_product")
+        erb(:"show")
     end
 
 
     # HELP METHODS FOR BROWSE
 
-    
     def pretty_print_key(str)
         result = str.split('_').map.with_index { |word, index| 
             index == 0 ? word.capitalize : word.downcase
@@ -170,17 +420,16 @@ class App < Sinatra::Base
     end
 
     post '/log_in' do
-        username = params['username']
-        user_email = params['user_email']
+        user_name_email = params['user_name_email']
         cleartext_password = params['password'] 
       
 
-        user = db.execute('SELECT * FROM users WHERE username = ?', username).first
+        user = db.execute('SELECT * FROM users WHERE username = ?', user_name_email).first
 
 
 
         if !user
-            user = db.execute('SELECT * FROM users WHERE user_email = ?', user_email).first
+            user = db.execute('SELECT * FROM users WHERE user_email = ?', user_name_email).first
         end
 
 
@@ -224,6 +473,10 @@ class App < Sinatra::Base
             VALUES (?, ?, ?)
             ", [username, user_email, hashed_pasword])
 
+        user_id = db.last_insert_row_id
+        session[:user_id] = user_id 
+
+
         redirect("/")
     end
 
@@ -246,10 +499,23 @@ class App < Sinatra::Base
 
     get '/user/cart' do 
 
+        user_id = session[:user_id]
+
+        @cart = db.execute("SELECT products.id
+            FROM users 
+                INNER JOIN cart 
+                ON cart.user_id = users.id 
+                INNER JOIN products
+                ON cart.product_id = products.id
+            WHERE users.id = ?", user_id)
+    
+            p @cart
+        
         erb(:"cart")
     end
 
     get '/add_to_cart/:product_id' do |product_id|
+        authenticated()
         
         db.execute("INSERT INTO cart (user_id, product_id) VALUES (?,?)", [session[:user_id], product_id])
         
@@ -260,230 +526,5 @@ class App < Sinatra::Base
 
 
 
-
-
-# ADMIN CRUD
-
-    get '/admin/log_in' do 
-        erb(:"admin_log_in")
-    end
-
-    post '/admin/log_in' do 
-        username = params['username']
-        cleartext_password = params['password'] 
-
-        user = db.execute('SELECT * FROM admin WHERE name = ?', username).first
-
-        if !user
-            redirect("/error")
-        end
-      
-        password_from_db = BCrypt::Password.new(user['password'])
-
-        if password_from_db == cleartext_password 
-            session[:admin_id] = user['id'] 
-            redirect("/admin")
-        else
-            redirect("/error")
-        end 
-    end
-
-    get '/admin' do
-        admin_authenticated()
-        erb(:"admin")
-    end
-
-
-    get '/admin/delete_all_images' do
-        clear_products_folder()
-        redirect("/admin")
-    end
-
-
-    get '/admin/create_new_product' do 
-        erb(:"new_product")
-    end
-
-
-    post '/admin/create_new_product' do 
-
-        # Access form fields
-        title = params['title']
-        price = params['price']
-        product_type = params['product_type']
-        model_year = params['model_year']
-        brand = params['brand']
-        fuel = params['fuel']
-        horse_power = params['horse_power']
-        milage_km = params['milage_km']
-        exterior_color = params['exterior_color']
-        condition = params['condition']
-        description = params['description']
-      
-        # Insert product into the database
-        db.execute(
-            "INSERT INTO products (title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
-        )
-      
-        # Get the product ID for the uploaded images
-        product_id = db.last_insert_row_id
-
-        store_new_product_images(params["new_images"], product_id)
-
-        # Redirect back to the admin page
-        redirect("/browse/#{product_id}")
-    end 
-
-
-    get '/admin/products' do 
-        all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
-            FROM products
-                INNER JOIN product_images
-                ON products.id = product_images.product_id
-            ORDER BY product_images.image_order")
-
-
-        @all_products = []
-
-        all_products.each_with_index do |product, i|
-            element_exists = false
-            @all_products.each do |element|
-                element['id'] == product['id'] ? element_exists = true : nil
-            end 
-
-            if element_exists
-                @all_products.each do |arr_product|
-                    if arr_product['id'] == product['id']
-                        arr_product['image_path'] << product['image_path']
-                    end
-                end
-            else
-                product['image_path'] = [product['image_path']]
-                @all_products << product
-            end
-
-            product[:formatked_price] = pretty_print_price(product["price"])
-        end
-
-        erb(:"admin_products")
-    end
-
-
-    post "/admin/:id/delete" do |id|
-        db.execute('DELETE FROM products WHERE id=?', id)
-        db.execute('DELETE FROM cart WHERE product_id=?', id)
-        remove_product_image_folder(id)
-
-        redirect("/admin/products")
-    end
-
-    def remove_product_image_folder(product_id)
-        db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
-        folder_path = "public/img/products/#{product_id}"
-        FileUtils.rm_rf(folder_path)
-    end
-
-    def store_new_product_images(images, product_id)
-
-        # Ensure the product folder exists
-        product_folder = "public/img/products/#{product_id}"
-        FileUtils.mkdir_p(product_folder)
-      
-        # Handle uploaded images
-        if images
-            # Process each uploaded file
-            Array(images).each_with_index do |uploaded_file, index|
-                # Generate a unique filename
-                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
-                filepath = "/img/products/#{product_id}/#{unique_filename}" # Relative path
-                absolute_path = File.join("public", filepath) # Absolute path
-        
-                # Save the file
-                File.open(absolute_path, 'wb') do |file|
-                    file.write(uploaded_file[:tempfile].read)
-                end
-                # Save the file path in the database
-                db.execute("INSERT INTO product_images (product_id, image_path, image_order) VALUES (?, ?, ?)", [product_id, filepath, index])
-            end
-        end
-    end
-
-
-    def sort_images_and_remove_rest(images_order, product_id)
-        all_images = db.execute("SELECT image_path, id FROM product_images WHERE product_id=?", product_id)
-    
-        # Extract meaningful names from image paths
-        all_images.each do |image|
-            image["img_name"] = image["image_path"].split("/")[-1].split("_")[1..-1].join("_")
-        end
-    
-        # Create a mutable list to track available images
-        available_images = all_images.dup
-    
-        # Find matching images while ensuring uniqueness
-        matching_images = images_order.map do |name|
-            match = available_images.find { |img| img["img_name"] == name }
-            available_images.delete(match) if match # Remove used match to prevent duplicates
-            match
-        end.compact
-    
-        # Get remaining non-matching images
-        non_matching_images = available_images
-    
-        puts "Matching Images: #{matching_images}"
-        puts "Non-matching Images: #{non_matching_images}"
-    
-        # Update image order
-        matching_images.each_with_index do |img, i|
-            db.execute("UPDATE product_images SET image_order=? WHERE id=?", [i, img['id']])
-        end
-    
-        # Remove unmatched images
-        non_matching_images.each do |img|
-            db.execute("DELETE FROM product_images WHERE id=?", img['id'])
-            FileUtils.rm("public#{img['image_path']}")
-        end
-    end
-    
-
-    get "/admin/:id/edit" do |id|
-
-        @product = select_products_and_combine_images(id).first
-
-        erb(:"edit")
-
-    end
-
-    post "/admin/:id/update" do |id|
-
-        # Access form fields
-        title = params['title']
-        price = params['price']
-        product_type = params['product_type']
-        model_year = params['model_year']
-        brand = params['brand']
-        fuel = params['fuel']
-        horse_power = params['horse_power']
-        milage_km = params['milage_km']
-        exterior_color = params['exterior_color']
-        condition = params['condition']
-        description = params['description']
-
-        db.execute(
-            "UPDATE products SET title=?, description=?, price=?, model_year=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
-            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
-        )
-    
-
-        store_new_product_images(params['new_images'], id) if params['new_images']
-
-        sort_images_and_remove_rest(params[:images_order].split(","), id) if params[:images_order]
-    
-        redirect("/browse/#{id}")
-        
-
-    end
 
 end

@@ -1,5 +1,5 @@
 <head>
-    <link rel="stylesheet" href="/css/browse.css?<%=Time.now.to_i%>">
+    <link rel="stylesheet" href="/css/products.css?<%=Time.now.to_i%>">
 </head>
 
 
@@ -66,11 +66,11 @@
 
 
                 <div class="card">
-                    <div class="img-container">
+                    <a class="img-container" href="/products/<%=product['id']%>">
                         <img src="<%= product["image_paths"].first%>" alt="<%= product["title"]%>">
-                    </div>
+                    </a>
                     <div class="info-container">
-                        <p class="title"><%= product["title"]%></p>
+                        <a class="title" href="/products/<%=product['id']%>"><%= product["title"]%></a>
                         <p class="price"><%= product[:formated_price]%> SEK</p>
                         <ul class="basic-info">
 
@@ -107,7 +107,7 @@
                             SHARE
                         </button>
 
-                        <a class="user-interaction-2 view-details" href="/browse/<%=product['id']%>">
+                        <a class="user-interaction-2 view-details" href="/products/<%=product['id']%>">
                             VIEW DETAILS
                             <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'
                                 class="icon-white">

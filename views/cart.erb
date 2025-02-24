@@ -6,27 +6,34 @@
             <h1 class="header">Your cart</h1>
             <div class="cart-container">
                 <div class="product-container">
-                    <div class="product">
-                        <a class="product-image-container" href="/product.html">
-                            <img src="/img/products/car1.webp" alt="">
-                        </a>
-                        <div class="product-info-container">
-                            <a href="/product.html">
-                                <p class="title">Porsche Taycan or whatever</p>
-                                <p class="price">1 000 000 SEK</p>
-                            </a>
+                    
+                    <% if @cart%>
+                        <%@cart.each do |product|%>
+                            <div class="product">
+                                <a class="product-image-container" href="/products.html">
+                                    <img src="/img/productss/car1.webp" alt="">
+                                </a>
+                                <div class="product-info-container">
+                                    <a href="/products.html">
+                                        <p class="title">Porsche Taycan or whatever</p>
+                                        <p class="price">1 000 000 SEK</p>
+                                    </a>
 
-                            <div class="product-controlls">
-                                <button class="remove-button-1">
-                                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
-                                        <path
-                                            d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
-                                        </path>
-                                    </svg>
-                                </button>
+                                    <div class="product-controlls">
+                                        <button class="remove-button-1">
+                                            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
+                                                <path
+                                                    d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        <% end %>
+                    <% end %>
+                    
+                    
 
                 </div>
 
@@ -37,7 +44,7 @@
                         <div class="product-part">
                             <div class="part">
 
-                                <a class="product-name" href="/product.html">Porsche Taycan whatever</a>
+                                <a class="product-name" href="/products.html">Porsche Taycan whatever</a>
 
                                 <button class="remove-button-2">
                                     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
@@ -50,15 +57,15 @@
 
                             <div class="part">
                                 <p class="label">
-                                    Price exc. tax
+                                    Price
                                 </p>
                                 <p class="info">
-                                    900 000 SEK
+                                    1 000 000 SEK
                                 </p>
                             </div>
                             <div class="part">
                                 <p class="label">
-                                    Tax
+                                    Including tax
                                 </p>
                                 <p class="info">
                                     100 000 SEK
@@ -85,6 +92,6 @@
                 </div>
             </div>
 
-            <a href="/browse.html" class="keep-shopping-btn">Keep shopping</a>
+            <a href="/products" class="keep-shopping-btn">Keep shopping</a>
 
         </section>

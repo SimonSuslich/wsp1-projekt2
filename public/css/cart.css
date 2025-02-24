@@ -34,7 +34,7 @@
 
 .product-container .product {
     height: auto;
-    background-color: var(--main-color-2);
+    background-color: var(--bg-color-2);
     display: grid;
     grid-template-columns: 30% auto;
 }
@@ -87,7 +87,7 @@
 }
 
 .remove-button-1 svg {
-    fill: var(--main-color-2);
+    fill: var(--bg-color-2);
 }
 
 .remove-button-2 svg {
@@ -96,7 +96,7 @@
 
 
 .checkout-container {
-    background-color: var(--main-color-2);
+    background-color: var(--bg-color-2);
     display: grid;
     padding: 1rem;
     gap: 1rem;

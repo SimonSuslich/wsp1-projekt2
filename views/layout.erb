@@ -21,7 +21,7 @@
         <nav class="standard-nav">
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/browse">Browse</a></li>
+                <li><a href="/products">Browse</a></li>
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>
@@ -33,10 +33,8 @@
         <div class="user-controlls-container">
             <div class="user-controlls">
                 <% if session[:user_id] || session[:admin_id] %>
-                    <% p "broooo! "%>
                     <a class="btn-1 btn-expand btn-hollow" href="/log_out">Log out</a>
                 <% else %>
-                    <% p "hey!"%>
                     <a class="btn-1 btn-expand btn-hollow" href="/log_in">Log in</a>
                     <a class="btn-1 btn-expand btn-filled" href="/sign_up">Sign up</a>
                 <% end %>
@@ -85,7 +83,7 @@
         <nav class="menu-nav">
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/browse">Browse</a></li>
+                <li><a href="/products">Browse</a></li>
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>

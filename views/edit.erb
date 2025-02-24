@@ -5,7 +5,7 @@
 <div class="add_new_product_container">
     <h1>Edit product</h1>
 
-    <form action="/admin/<%=@product['id']%>/update" method="post" enctype="multipart/form-data" onsubmit="prepareFiles(event)" class="add-new-product">
+    <form action="/products/<%=@product['id']%>/update" method="post" enctype="multipart/form-data" onsubmit="prepareFiles(event)" class="add-new-product">
 
         <%@product.each do |key, value|%>
             <%banned_key = ['image_paths', :basic_info, :formated_price, 'id']%>

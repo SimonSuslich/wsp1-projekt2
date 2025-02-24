@@ -7,11 +7,11 @@
 
         <% @all_products.each do |product|%>
             <div class="product">
-                <a class="product-image-container" href="/browse/<%=product['id']%>">
+                <a class="product-image-container" href="/products/<%=product['id']%>">
                     <img src="<%= product['image_path'].first%>" alt="">
                 </a>
                 <div class="product-info-container">
-                    <a href="/browse/<%=product['id']%>">
+                    <a href="/products/<%=product['id']%>">
                         <p class="title"><%= product['title']%></p>
                         <p class="price"><%= product[:formated_price]%> SEK</p>
                     </a>
@@ -19,13 +19,13 @@
                     <div class="product-controlls">
 
 
-                        <a href="/admin/<%= product['id']%>/edit">
+                        <a href="/products/<%= product['id']%>/edit">
                             Edit
                         </a>
-                        <a href="/browse/<%= product['id'] %>">
+                        <a href="/products/<%= product['id'] %>">
                             View
                         </a>
-                        <form action="/admin/<%= product['id']%>/delete" method="POST">
+                        <form action="/products/<%= product['id']%>/delete" method="POST">
                             <input type="submit" value="Delete" class="">
                         </form>
                     </div>
