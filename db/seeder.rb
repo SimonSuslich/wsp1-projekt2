@@ -1,4 +1,5 @@
 require 'sqlite3'
+require_relative '../lib/product_helpers'
 
 class Seeder
   
@@ -6,6 +7,7 @@ class Seeder
     drop_tables
     create_tables
     create_admin
+    clear_products_folder()
   end
 
   def self.drop_tables
@@ -24,6 +26,7 @@ class Seeder
                 description TEXT,
                 price INTEGER NOT NULL,
                 model_year INTEGER,
+                gear_box TEXT,
                 brand TEXT,
                 fuel TEXT,
                 horse_power TEXT,

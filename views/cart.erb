@@ -7,19 +7,19 @@
             <div class="cart-container">
                 <div class="product-container">
                     
-                    <% if @cart%>
+                    <% if !@cart.empty?%>
                         <%@cart.each do |product|%>
                             <div class="product">
-                                <a class="product-image-container" href="/products.html">
-                                    <img src="/img/productss/car1.webp" alt="">
+                                <a class="product-image-container" href="/products/<%=product['id']%>">
+                                    <img src="<%=product['image_path']%>" alt="">
                                 </a>
                                 <div class="product-info-container">
-                                    <a href="/products.html">
-                                        <p class="title">Porsche Taycan or whatever</p>
-                                        <p class="price">1 000 000 SEK</p>
+                                    <a href="/products/<%=product['id']%>">
+                                        <p class="title"><%=product['title']%></p>
+                                        <p class="price"><%=product[:formated_price]%></p>
                                     </a>
 
-                                    <div class="product-controlls">
+                                    <form action="/cart/<%=product['id']%>/delete" method="post" class="product-controlls">
                                         <button class="remove-button-1">
                                             <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
                                                 <path
@@ -27,10 +27,12 @@
                                                 </path>
                                             </svg>
                                         </button>
-                                    </div>
+                                    </form>
                                 </div>
                             </div>
                         <% end %>
+                    <% else %>
+                        <p>Your cart is empty...</p>
                     <% end %>
                     
                     
@@ -41,49 +43,41 @@
                 <div class="checkout-container">
                     <h2>Summary</h2>
                     <div class="overview">
-                        <div class="product-part">
-                            <div class="part">
 
-                                <a class="product-name" href="/products.html">Porsche Taycan whatever</a>
+                        <% if !@cart.empty? %>
+                            <% @cart.each do |product| %>
+                                <div class="product-part">
+                                    <div class="part">
+                                        <a class="product-name" href="/products/<%=product['id']%>"><%=product['title']%></a>
+                                        <form action="/cart/<%=product['id']%>/delete" method="post">
+                                            <button class="remove-button-2">
+                                                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
+                                                    <path
+                                                        d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
 
-                                <button class="remove-button-2">
-                                    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'>
-                                        <path
-                                            d="m16.192 6.344-4.243 4.242-4.242-4.242-1.414 1.414L10.535 12l-4.242 4.242 1.414 1.414 4.242-4.242 4.243 4.242 1.414-1.414L13.364 12l4.242-4.242z">
-                                        </path>
-                                    </svg>
-                                </button>
-                            </div>
+                                    <div class="part">
+                                        <p class="label">
+                                            Price
+                                        </p>
+                                        <p class="info">
+                                            <%=product[:formated_price]%> SEK
+                                        </p>
+                                    </div>
+                                </div>
+                            <% end %>
 
-                            <div class="part">
-                                <p class="label">
-                                    Price
-                                </p>
-                                <p class="info">
-                                    1 000 000 SEK
-                                </p>
-                            </div>
-                            <div class="part">
-                                <p class="label">
-                                    Including tax
-                                </p>
-                                <p class="info">
-                                    100 000 SEK
-                                </p>
-                            </div>
-                            <div class="part">
-                                <p class="label">
-                                    Shipping
-                                </p>
-                                <p class="info">
-                                    0 SEK
-                                </p>
-                            </div>
-                        </div>
+                        <% end %>
+                        
 
                         <div class="part total-cost-part">
                             <p class="label">Total cost</p>
-                            <p class="info">1 000 000 SEK</p>
+ 
+                            <p class="info"><%= @total_cost_formated %> SEK</p>
                         </div>
 
                     </div>

@@ -1,6 +1,7 @@
 require 'securerandom'
 require 'sinatra'
 require 'fileutils'
+require_relative 'lib/product_helpers'
 
 
 class App < Sinatra::Base
@@ -10,6 +11,7 @@ class App < Sinatra::Base
     # Funktion som returnerar en databaskoppling
     # Exempel på användning: db.execute('SELECT * FROM fruits')
     def db
+
         return @db if @db
 
         @db = SQLite3::Database.new("db/vcars.sqlite")
@@ -19,15 +21,7 @@ class App < Sinatra::Base
     end
 
 
-    def clear_products_folder(folder_path="public/img/productss")
-        if Dir.exist?(folder_path)
-            # Remove all contents (files and subfolders)
-            FileUtils.rm_rf(Dir.glob("#{folder_path}/*"))
-            puts "Cleared all contents of the products folder."
-        else
-            puts "The products folder does not exist."
-        end
-    end
+
     
 
 
@@ -53,8 +47,7 @@ class App < Sinatra::Base
 
     
     get '/' do
-        authenticated()
-        erb(:"index")
+        redirect("/products")
     end
 
 
@@ -75,7 +68,7 @@ class App < Sinatra::Base
     # ADMIN CRUD
 
     get '/admin/log_in' do 
-        erb(:"admin_log_in")
+        erb(:"admin/admin_log_in")
     end
 
     post '/admin/log_in' do 
@@ -104,21 +97,13 @@ class App < Sinatra::Base
 
     get '/admin' do
         admin_authenticated()
-        erb(:"admin")
-    end
-
-
-    get '/delete_all_images' do
-        admin_authenticated()
-
-        clear_products_folder()
-        redirect("/admin")
+        erb(:"admin/admin")
     end
 
 
     get '/products/new' do 
         admin_authenticated()
-        erb(:"new")
+        erb(:"product/new")
     end
 
 
@@ -130,6 +115,7 @@ class App < Sinatra::Base
         price = params['price']
         product_type = params['product_type']
         model_year = params['model_year']
+        gear_box = params['gear_box']
         brand = params['brand']
         fuel = params['fuel']
         horse_power = params['horse_power']
@@ -140,9 +126,9 @@ class App < Sinatra::Base
     
         # Insert product into the database
         db.execute(
-            "INSERT INTO products (title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
+            "INSERT INTO products (title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+            [title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
         )
     
         # Get the product ID for the uploaded images
@@ -155,38 +141,24 @@ class App < Sinatra::Base
     end 
 
 
-    get '/products/admin' do 
+    get '/admin/view_products' do 
         admin_authenticated()
-        all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
+        @all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
             FROM products
                 INNER JOIN product_images
                 ON products.id = product_images.product_id
-            ORDER BY product_images.image_order")
+            WHERE product_images.image_order = 0")
 
 
-        @all_products = []
 
-        all_products.each_with_index do |product, i|
-            element_exists = false
-            @all_products.each do |element|
-                element['id'] == product['id'] ? element_exists = true : nil
-            end 
+        @all_products.each do |product|
 
-            if element_exists
-                @all_products.each do |arr_product|
-                    if arr_product['id'] == product['id']
-                        arr_product['image_path'] << product['image_path']
-                    end
-                end
-            else
-                product['image_path'] = [product['image_path']]
-                @all_products << product
-            end
-
-            product[:formatked_price] = pretty_print_price(product["price"])
+            product[:formated_price] = pretty_print_price(product["price"])
         end
 
-        erb(:"admin_products")
+        p @all_products
+
+        erb(:"admin/admin_products")
     end
 
 
@@ -199,76 +171,6 @@ class App < Sinatra::Base
         redirect("/products/admin")
     end
 
-    def remove_product_image_folder(product_id)
-        admin_authenticated()
-        db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
-        folder_path = "public/img/productss/#{product_id}"
-        FileUtils.rm_rf(folder_path)
-    end
-
-    def store_new_product_images(images, product_id)
-        admin_authenticated()
-
-        # Ensure the product folder exists
-        product_folder = "public/img/productss/#{product_id}"
-        FileUtils.mkdir_p(product_folder)
-    
-        # Handle uploaded images
-        if images
-            # Process each uploaded file
-            Array(images).each_with_index do |uploaded_file, index|
-                # Generate a unique filename
-                unique_filename = "#{SecureRandom.hex(8)}_#{uploaded_file[:filename]}"
-                filepath = "/img/productss/#{product_id}/#{unique_filename}" # Relative path
-                absolute_path = File.join("public", filepath) # Absolute path
-        
-                # Save the file
-                File.open(absolute_path, 'wb') do |file|
-                    file.write(uploaded_file[:tempfile].read)
-                end
-                # Save the file path in the database
-                db.execute("INSERT INTO product_images (product_id, image_path, image_order) VALUES (?, ?, ?)", [product_id, filepath, index])
-            end
-        end
-    end
-
-
-    def sort_images_and_remove_rest(images_order, product_id)
-        admin_authenticated()
-        all_images = db.execute("SELECT image_path, id FROM product_images WHERE product_id=?", product_id)
-
-        # Extract meaningful names from image paths
-        all_images.each do |image|
-            image["img_name"] = image["image_path"].split("/")[-1].split("_")[1..-1].join("_")
-        end
-
-        # Create a mutable list to track available images
-        available_images = all_images.dup
-
-        # Find matching images while ensuring uniqueness
-        matching_images = images_order.map do |name|
-            match = available_images.find { |img| img["img_name"] == name }
-            available_images.delete(match) if match # Remove used match to prevent duplicates
-            match
-        end.compact
-
-        # Get remaining non-matching images
-        non_matching_images = available_images
-
-        puts "Matching Images: #{matching_images}"
-        puts "Non-matching Images: #{non_matching_images}"
-
-        # Update image order
-        matching_images.each_with_index do |img, i|
-            db.execute("UPDATE product_images SET image_order=? WHERE id=?", [i, img['id']])
-        end
-
-        # Remove unmatched images
-        non_matching_images.each do |img|
-            db.execute("DELETE FROM product_images WHERE id=?", img['id'])
-            FileUtils.rm("public#{img['image_path']}")
-        end
-    end
 
 
     get "/products/:id/edit" do |id|
@@ -276,7 +178,7 @@ class App < Sinatra::Base
 
         @product = select_products_and_combine_images(id).first
 
-        erb(:"edit")
+        erb(:"product/edit")
 
     end
 
@@ -288,6 +190,7 @@ class App < Sinatra::Base
         price = params['price']
         product_type = params['product_type']
         model_year = params['model_year']
+        gear_box = params['gear_box']
         brand = params['brand']
         fuel = params['fuel']
         horse_power = params['horse_power']
@@ -297,8 +200,8 @@ class App < Sinatra::Base
         description = params['description']
 
         db.execute(
-            "UPDATE products SET title=?, description=?, price=?, model_year=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
-            [title, description, price, model_year, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
+            "UPDATE products SET title=?, description=?, price=?, model_year=?, gear_box=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
+            [title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
         )
 
 
@@ -313,9 +216,6 @@ class App < Sinatra::Base
 
 
 
-
-
-
     # products
 
     get '/products' do
@@ -326,7 +226,7 @@ class App < Sinatra::Base
             product[:formated_price] = pretty_print_price(product['price'])
         end
 
-        erb(:"products")
+        erb(:"product/products")
     end
 
     get '/products/:product_id' do |product_id|
@@ -334,78 +234,12 @@ class App < Sinatra::Base
         @product[:formated_price] = pretty_print_price(@product["price"])
         format_product_info(@product)
 
-        erb(:"show")
+        erb(:"product/show")
     end
 
 
     # HELP METHODS FOR BROWSE
 
-    def pretty_print_key(str)
-        result = str.split('_').map.with_index { |word, index| 
-            index == 0 ? word.capitalize : word.downcase
-        }.join(' ')
-  
-        return result
-    end
-
-    def pretty_print_price(price) 
-        str_price = price.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1 ').reverse
-    end
-
-    def select_products_and_combine_images(product_id = nil)
-
-        sqlPrompt = 'SELECT 
-                products.id, 
-                products.product_type, 
-                products.title, 
-                products.price, 
-                products.model_year, 
-                products.brand, 
-                products.fuel, 
-                products.horse_power, 
-                products.milage_km, 
-                products.exterior_color, 
-                products.condition, 
-                products.description, 
-
-                GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
-            FROM 
-                products
-            INNER JOIN 
-                product_images 
-            ON 
-                products.id = product_images.product_id
-            '
-
-        if product_id
-            sqlPrompt << "WHERE products.id=#{product_id}"
-        end
-
-        sqlPrompt << "            GROUP BY 
-        products.id"
-
-        all_products = db.execute(sqlPrompt)
-
-        all_products.each do |product|
-            product['image_paths'] = product['image_paths'].split(',')
-        end
-
-    end
-
-    def format_product_info(product)
-        banned_key = ["title", "product_type", "description", "id", "price", "image_paths", :formated_price, :basic_info]
-
-        product[:basic_info] = []
-
-        product.each do |key, value|
-            if !banned_key.include?(key) && value.to_s != ""
-                product[:basic_info]<<{
-                    header: pretty_print_key(key),
-                    value: value
-                }
-            end
-        end
-    end
 
 
 
@@ -486,7 +320,6 @@ class App < Sinatra::Base
         if !username_list.empty?
             redirect("/error")
         end
-
     end
 
     get '/log_out' do 
@@ -497,30 +330,59 @@ class App < Sinatra::Base
 
     # USER CART
 
-    get '/user/cart' do 
+    get '/cart' do 
 
         user_id = session[:user_id]
 
-        @cart = db.execute("SELECT products.id
+        @cart = db.execute("SELECT products.id, products.title, products.price, product_images.image_path
             FROM users 
                 INNER JOIN cart 
                 ON cart.user_id = users.id 
                 INNER JOIN products
                 ON cart.product_id = products.id
-            WHERE users.id = ?", user_id)
+                INNER JOIN product_images
+                ON products.id = product_images.product_id
+            WHERE users.id = ? AND product_images.image_order = 0", user_id)
     
-            p @cart
+
+        
+        @total_cost = 0
+        @cart.each do |product|
+            product[:formated_price] = pretty_print_price(product['price'])
+            @total_cost += product['price']
+        end
+
+        @total_cost_formated = pretty_print_price(@total_cost)
+
+        p @cart.empty?
+
+
+
         
         erb(:"cart")
     end
 
-    get '/add_to_cart/:product_id' do |product_id|
+    get '/cart/:product_id/new' do |product_id|
         authenticated()
+
+        sql_prompt = db.execute("SELECT * FROM cart WHERE user_id=? AND product_id=?", [session[:user_id], product_id])
+
+        if !sql_prompt.empty?
+            redirect("/cart")
+        end
         
         db.execute("INSERT INTO cart (user_id, product_id) VALUES (?,?)", [session[:user_id], product_id])
         
-        redirect("/user/cart")
+        redirect("/cart")
     end
+
+    post '/cart/:product_id/delete' do |product_id|
+        db.execute("DELETE FROM cart WHERE product_id=? AND user_id=?", [product_id, session[:user_id]])
+
+        redirect("/cart")
+    end
+
+
 
 
 

@@ -8,7 +8,7 @@
         <% @all_products.each do |product|%>
             <div class="product">
                 <a class="product-image-container" href="/products/<%=product['id']%>">
-                    <img src="<%= product['image_path'].first%>" alt="">
+                    <img src="<%= product['image_path']%>" alt="">
                 </a>
                 <div class="product-info-container">
                     <a href="/products/<%=product['id']%>">
