@@ -232,11 +232,13 @@ section.view-product .product-info-container {
     gap: 1rem;
 }
 
+
 .product-info-container .purchase-controlls button {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    width: 100%;
 }
 
 .product-info-container .purchase-controlls button svg {

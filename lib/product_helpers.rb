@@ -1,3 +1,9 @@
+def new_product(product_info)
+  db.execute(
+    "INSERT INTO products (title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", product_info)
+end
+
 
 def clear_products_folder(folder_path="public/img/products")
   if Dir.exist?(folder_path)
@@ -11,7 +17,7 @@ end
 
 def remove_product_image_folder(product_id)
   admin_authenticated()
-  db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
+  # db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
   folder_path = "public/img/products/#{product_id}"
   FileUtils.rm_rf(folder_path)
 end
@@ -95,36 +101,62 @@ end
 
 def select_products_and_combine_images(product_id = nil)
 
-    sqlPrompt = 'SELECT 
-            products.id, 
-            products.product_type, 
-            products.title, 
-            products.price, 
-            products.model_year,
-            products.gear_box, 
-            products.brand, 
-            products.fuel, 
-            products.horse_power, 
-            products.milage_km, 
-            products.exterior_color, 
-            products.condition, 
-            products.description, 
+    # sqlPrompt = 'SELECT 
+    #         products.id, 
+    #         products.product_type, 
+    #         products.title, 
+    #         products.price, 
+    #         products.model_year,
+    #         products.gear_box, 
+    #         products.brand, 
+    #         products.fuel, 
+    #         products.horse_power, 
+    #         products.milage_km, 
+    #         products.exterior_color, 
+    #         products.condition, 
+    #         products.description, 
 
-            GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
-        FROM 
-            products
-        INNER JOIN 
-            product_images 
-        ON 
-            products.id = product_images.product_id
-        '
+    #         GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
+    #     FROM 
+    #         products
+    #     INNER JOIN 
+    #         product_images 
+    #     ON 
+    #         products.id = product_images.product_id
+    #     '
+    sqlPrompt = 'SELECT 
+                      products.id, 
+                      products.product_type, 
+                      products.title, 
+                      products.price, 
+                      products.model_year,
+                      products.gear_box, 
+                      products.brand, 
+                      products.fuel, 
+                      products.horse_power, 
+                      products.milage_km, 
+                      products.exterior_color, 
+                      products.condition, 
+                      products.description, 
+                      GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
+                  FROM 
+                      products
+                  INNER JOIN 
+                      product_images 
+                  ON 
+                      products.id = product_images.product_id
+                  LEFT JOIN 
+                      sales 
+                  ON 
+                      products.id = sales.product_id
+                  WHERE 
+                      sales.product_id IS NULL'
 
     if product_id
-      sqlPrompt << "WHERE products.id=#{product_id}"
+      sqlPrompt << " AND products.id=#{product_id}"
     end
 
-    sqlPrompt << "            GROUP BY 
-    products.id"
+    sqlPrompt << " GROUP BY products.id"
 
     all_products = db.execute(sqlPrompt)
 
@@ -148,3 +180,4 @@ def format_product_info(product)
     end
   end
 end
+

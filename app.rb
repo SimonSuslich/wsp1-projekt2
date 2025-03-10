@@ -2,6 +2,8 @@ require 'securerandom'
 require 'sinatra'
 require 'fileutils'
 require_relative 'lib/product_helpers'
+require_relative 'lib/user_helpers'
+require_relative 'lib/admin_helpers'
 
 
 class App < Sinatra::Base
@@ -22,9 +24,6 @@ class App < Sinatra::Base
 
 
 
-    
-
-
     configure do
         enable :sessions
         set :session_secret, SecureRandom.hex(64)
@@ -32,18 +31,6 @@ class App < Sinatra::Base
 
     
 
-
-    def authenticated
-        if !session[:user_id] 
-            redirect("/log_in")
-        end
-    end
-
-    def admin_authenticated
-        if !session[:admin_id]
-            redirect("/admin/log_in")
-        end
-    end
 
     
     get '/' do
@@ -60,35 +47,22 @@ class App < Sinatra::Base
 
 
 
-
-
-
-
-
     # ADMIN CRUD
 
     get '/admin/log_in' do 
-        erb(:"admin/admin_log_in")
+        erb(:"admin/log_in")
     end
 
     post '/admin/log_in' do 
-        user_name_email = params['user_name_email']
+        admin_name_email = params['user_name_email']
         cleartext_password = params['password'] 
 
-        user = db.execute('SELECT * FROM admin WHERE name = ?', user_name_email).first
-
-        if !user
-            user = db.execute('SELECT * FROM admin WHERE email = ?', user_name_email).first
-        end
-
-        if !user
-            redirect("/error")
-        end
+        admin = get_admin(admin_name_email)
     
-        password_from_db = BCrypt::Password.new(user['password'])
+        password_from_db = BCrypt::Password.new(admin['password'])
 
         if password_from_db == cleartext_password 
-            session[:admin_id] = user['id'] 
+            session[:admin_id] = admin['id'] 
             redirect("/admin")
         else
             redirect("/error")
@@ -125,12 +99,10 @@ class App < Sinatra::Base
         description = params['description']
     
         # Insert product into the database
-        db.execute(
-            "INSERT INTO products (title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-            [title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition]
-        )
-    
+
+        new_product([title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition])
+
+
         # Get the product ID for the uploaded images
         product_id = db.last_insert_row_id
 
@@ -141,34 +113,25 @@ class App < Sinatra::Base
     end 
 
 
-    get '/admin/view_products' do 
+    get '/admin/products' do 
         admin_authenticated()
-        @all_products = db.execute("SELECT products.id, products.title,  products.price, product_images.image_path
-            FROM products
-                INNER JOIN product_images
-                ON products.id = product_images.product_id
-            WHERE product_images.image_order = 0")
-
-
+        @all_products = admin_view_products()
 
         @all_products.each do |product|
-
             product[:formated_price] = pretty_print_price(product["price"])
         end
 
-        p @all_products
-
-        erb(:"admin/admin_products")
+        erb(:"admin/products")
     end
 
 
     post "/products/:id/delete" do |id|
         admin_authenticated()
+        db.execute('PRAGMA foreign_keys = ON')  # Ensure cascading works
         db.execute('DELETE FROM products WHERE id=?', id)
-        db.execute('DELETE FROM cart WHERE product_id=?', id)
         remove_product_image_folder(id)
 
-        redirect("/products/admin")
+        redirect("/admin/products")
     end
 
 
@@ -236,9 +199,6 @@ class App < Sinatra::Base
 
         erb(:"product/show")
     end
-
-
-    # HELP METHODS FOR BROWSE
 
 
 
@@ -314,13 +274,7 @@ class App < Sinatra::Base
         redirect("/")
     end
 
-    def check_username(username)
-        username_list = db.execute("SELECT username FROM users WHERE username=?", username)
 
-        if !username_list.empty?
-            redirect("/error")
-        end
-    end
 
     get '/log_out' do 
         session.destroy
@@ -328,7 +282,7 @@ class App < Sinatra::Base
     end
 
 
-    # USER CART
+    # CART CRUD
 
     get '/cart' do 
 
@@ -353,17 +307,12 @@ class App < Sinatra::Base
         end
 
         @total_cost_formated = pretty_print_price(@total_cost)
-
-        p @cart.empty?
-
-
-
         
         erb(:"cart")
     end
 
-    get '/cart/:product_id/new' do |product_id|
-        authenticated()
+    post '/cart/:product_id/new' do |product_id|
+        user_authenticated()
 
         sql_prompt = db.execute("SELECT * FROM cart WHERE user_id=? AND product_id=?", [session[:user_id], product_id])
 
@@ -372,8 +321,8 @@ class App < Sinatra::Base
         end
         
         db.execute("INSERT INTO cart (user_id, product_id) VALUES (?,?)", [session[:user_id], product_id])
-        
-        redirect("/cart")
+
+        redirect("/products/#{product_id}")
     end
 
     post '/cart/:product_id/delete' do |product_id|
@@ -384,7 +333,7 @@ class App < Sinatra::Base
 
 
 
-
+    #SALES CRUD
 
 
 
