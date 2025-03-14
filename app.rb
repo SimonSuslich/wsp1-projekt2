@@ -4,6 +4,7 @@ require 'fileutils'
 require_relative 'lib/product_helpers'
 require_relative 'lib/user_helpers'
 require_relative 'lib/admin_helpers'
+require_relative 'lib/cart_helpers'
 
 
 class App < Sinatra::Base
@@ -13,7 +14,6 @@ class App < Sinatra::Base
     # Funktion som returnerar en databaskoppling
     # Exempel på användning: db.execute('SELECT * FROM fruits')
     def db
-
         return @db if @db
 
         @db = SQLite3::Database.new("db/vcars.sqlite")
@@ -29,21 +29,13 @@ class App < Sinatra::Base
         set :session_secret, SecureRandom.hex(64)
     end
 
-    
-
-
-    
     get '/' do
         redirect("/products")
     end
 
-
-
     get '/about' do 
         erb(:"about")
     end
-
-
 
 
 
@@ -125,11 +117,11 @@ class App < Sinatra::Base
     end
 
 
-    post "/products/:id/delete" do |id|
+    post "/products/:product_id/delete" do |product_id|
         admin_authenticated()
-        db.execute('PRAGMA foreign_keys = ON')  # Ensure cascading works
-        db.execute('DELETE FROM products WHERE id=?', id)
-        remove_product_image_folder(id)
+
+        delete_product(product_id)
+        remove_product_image_folder(product_id)
 
         redirect("/admin/products")
     end
@@ -162,10 +154,7 @@ class App < Sinatra::Base
         condition = params['condition']
         description = params['description']
 
-        db.execute(
-            "UPDATE products SET title=?, description=?, price=?, model_year=?, gear_box=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", 
-            [title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id]
-        )
+        update_product([title, description, price, model_year, gear_box, brand, fuel, horse_power, milage_km, exterior_color, product_type, condition, id])
 
 
         store_new_product_images(params['new_images'], id) if params['new_images']
@@ -218,14 +207,11 @@ class App < Sinatra::Base
         cleartext_password = params['password'] 
       
 
-        user = db.execute('SELECT * FROM users WHERE username = ?', user_name_email).first
-
-
+        user = get_user_by_name(user_name_email)
 
         if !user
-            user = db.execute('SELECT * FROM users WHERE user_email = ?', user_name_email).first
+            user = get_user_by_email(user_name_email)
         end
-
 
         if !user
             redirect("/error")
@@ -263,9 +249,7 @@ class App < Sinatra::Base
 
         hashed_pasword = BCrypt::Password.create(password)
 
-        db.execute("INSERT INTO users (username, user_email, password) 
-            VALUES (?, ?, ?)
-            ", [username, user_email, hashed_pasword])
+        new_user([username, user_email, hashed_pasword])
 
         user_id = db.last_insert_row_id
         session[:user_id] = user_id 
@@ -288,19 +272,10 @@ class App < Sinatra::Base
 
         user_id = session[:user_id]
 
-        @cart = db.execute("SELECT products.id, products.title, products.price, product_images.image_path
-            FROM users 
-                INNER JOIN cart 
-                ON cart.user_id = users.id 
-                INNER JOIN products
-                ON cart.product_id = products.id
-                INNER JOIN product_images
-                ON products.id = product_images.product_id
-            WHERE users.id = ? AND product_images.image_order = 0", user_id)
+        @cart = get_cart_by_user(user_id)
     
-
-        
         @total_cost = 0
+        
         @cart.each do |product|
             product[:formated_price] = pretty_print_price(product['price'])
             @total_cost += product['price']
@@ -314,20 +289,18 @@ class App < Sinatra::Base
     post '/cart/:product_id/new' do |product_id|
         user_authenticated()
 
-        sql_prompt = db.execute("SELECT * FROM cart WHERE user_id=? AND product_id=?", [session[:user_id], product_id])
 
-        if !sql_prompt.empty?
+        if !product_in_cart?(session[:user_id], product_id)
             redirect("/cart")
         end
         
-        db.execute("INSERT INTO cart (user_id, product_id) VALUES (?,?)", [session[:user_id], product_id])
+        new_product_in_cart(session[:user_id], product_id)
 
         redirect("/products/#{product_id}")
     end
 
     post '/cart/:product_id/delete' do |product_id|
-        db.execute("DELETE FROM cart WHERE product_id=? AND user_id=?", [product_id, session[:user_id]])
-
+        remove_product_from_cart(session[:user_id], product_id)
         redirect("/cart")
     end
 

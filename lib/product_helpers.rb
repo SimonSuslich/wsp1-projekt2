@@ -4,6 +4,17 @@ def new_product(product_info)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", product_info)
 end
 
+def update_product(product_info)
+  db.execute(
+    "UPDATE products SET title=?, description=?, price=?, model_year=?, gear_box=?, brand=?, fuel=?, horse_power=?, milage_km=?, exterior_color=?, product_type=?, condition=? WHERE id=?", product_info
+  )
+end
+
+def delete_product(product_id)
+  db.execute('PRAGMA foreign_keys = ON')  # Ensure cascading works
+  db.execute('DELETE FROM products WHERE id=?', product_id)
+end
+
 
 def clear_products_folder(folder_path="public/img/products")
   if Dir.exist?(folder_path)
