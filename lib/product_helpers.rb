@@ -107,29 +107,6 @@ end
 
 def select_products_and_combine_images(product_id = nil)
 
-    # sqlPrompt = 'SELECT 
-    #         products.id, 
-    #         products.product_type, 
-    #         products.title, 
-    #         products.price, 
-    #         products.model_year,
-    #         products.gear_box, 
-    #         products.brand, 
-    #         products.fuel, 
-    #         products.horse_power, 
-    #         products.milage_km, 
-    #         products.exterior_color, 
-    #         products.condition, 
-    #         products.description, 
-
-    #         GROUP_CONCAT(product_images.image_path ORDER BY product_images.image_order) AS image_paths
-    #     FROM 
-    #         products
-    #     INNER JOIN 
-    #         product_images 
-    #     ON 
-    #         products.id = product_images.product_id
-    #     '
     sqlPrompt = 'SELECT 
                       products.id, 
                       products.product_type, 

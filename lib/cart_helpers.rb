@@ -11,7 +11,8 @@ def get_cart_by_user(user_id)
 end
 
 def product_in_cart?(user_id, product_id)
-  db.execute("SELECT * FROM cart WHERE user_id=? AND product_id=?", user_id, product_id).empty?
+  cart = db.execute("SELECT * FROM cart WHERE user_id=? AND product_id=?", [user_id, product_id])
+  return !cart.empty?
 end
 
 def new_product_in_cart(user_id, product_id)

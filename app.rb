@@ -161,6 +161,16 @@ class App < Sinatra::Base
     end
 
     ##
+    # @method GET /products/new
+    # @route GET /products/new
+    # Renders the product creation page.
+    #
+    # @return [void]
+    get '/products/new' do 
+        erb(:"product/new")
+    end
+
+    ##
     # @method GET /products/:product_id
     # @route GET /products/:product_id
     # Displays a single product based on its ID.
@@ -173,16 +183,6 @@ class App < Sinatra::Base
         format_product_info(@product)
 
         erb(:"product/show")
-    end
-
-    ##
-    # @method GET /products/new
-    # @route GET /products/new
-    # Renders the product creation page.
-    #
-    # @return [void]
-    get '/products/new' do 
-        erb(:"product/new")
     end
 
     ##
@@ -460,7 +460,7 @@ class App < Sinatra::Base
     # @param product_id [Integer] The ID of the product to add.
     # @return [void]
     post '/cart/:product_id/new' do |product_id|
-        if !product_in_cart?(session[:user_id], product_id)
+        if product_in_cart?(session[:user_id], product_id)
             redirect("/cart")
         end
         
