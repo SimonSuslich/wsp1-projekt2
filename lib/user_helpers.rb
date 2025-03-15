@@ -1,22 +1,14 @@
-def user_authenticated
-  if !session[:user_id] 
-    redirect("/log_in")
-  end
+def get_user(user_name_email)
+  user = db.execute('SELECT * FROM users WHERE username = ? OR user_email = ?', [user_name_email, user_name_email]).first
+  return user if user
+  halt erb(:error, locals: { message: "Invalid credentials", status: 401, route: "/log_in" })
 end
 
-def get_user_by_name(username)
-  db.execute('SELECT * FROM users WHERE username = ?', username).first
-end
+def check_username_and_email(username, user_email)
+  user_list = db.execute("SELECT username FROM users WHERE username=? OR user_email=?", [username, user_email])
 
-def get_user_by_email(email)
-  db.execute('SELECT * FROM users WHERE user_email = ?', email).first
-end
-
-def check_username(username)
-  username_list = db.execute("SELECT username FROM users WHERE username=?", username)
-
-  if !username_list.empty?
-    redirect("/error")
+  if !user_list.empty?
+    halt erb(:error, locals: { message: "Username or email already in use", status: 400, route: "/sign_up" })
   end
 end
 

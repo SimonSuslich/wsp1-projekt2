@@ -1,0 +1,27 @@
+{
+  "name": "slutprojekt-vcars",
+  "version": "1.0.0",
+  "description": "Enskillt projekt under andra halvan av höstterminen 2024 i kursen Webbserverprogrammering 1 på NTI Johanneberg.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SimonSuslich/wsp1-projekt2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SimonSuslich/wsp1-projekt2/issues"
+  },
+  "homepage": "https://github.com/SimonSuslich/wsp1-projekt2#readme",
+  "devDependencies": {
+    "cypress": "^14.2.0"
+  }
+}

@@ -1,20 +1,7 @@
 def get_admin(name_or_email)
-  admin = db.execute('SELECT * FROM admin WHERE name = ?', name_or_email).first
-  if !admin
-    admin = db.execute('SELECT * FROM admin WHERE email = ?', name_or_email).first
-  end
-
+  admin = db.execute('SELECT * FROM admin WHERE name = ? OR email = ?', [name_or_email, name_or_email]).first
   return admin if admin
-
-  redirect("/error")
-  return nil
-
-end
-
-def admin_authenticated
-  if !session[:admin_id]
-    redirect("/admin/log_in")
-  end
+  halt erb(:error, locals: { message: "Invalid credentials", status: 401, route: "/admin/log_in" })
 end
 
 def admin_view_products

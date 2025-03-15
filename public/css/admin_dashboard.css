@@ -1,0 +1,12 @@
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.admin-controlls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}

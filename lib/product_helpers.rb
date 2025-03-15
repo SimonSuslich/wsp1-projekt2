@@ -27,15 +27,11 @@ def clear_products_folder(folder_path="public/img/products")
 end
 
 def remove_product_image_folder(product_id)
-  admin_authenticated()
-  # db.execute('DELETE FROM product_images WHERE product_id=?', product_id)
   folder_path = "public/img/products/#{product_id}"
   FileUtils.rm_rf(folder_path)
 end
 
 def store_new_product_images(images, product_id)
-  admin_authenticated()
-
   # Ensure the product folder exists
   product_folder = "public/img/products/#{product_id}"
   FileUtils.mkdir_p(product_folder)
@@ -61,7 +57,6 @@ end
 
 
 def sort_images_and_remove_rest(images_order, product_id)
-  admin_authenticated()
   all_images = db.execute("SELECT image_path, id FROM product_images WHERE product_id=?", product_id)
 
   # Extract meaningful names from image paths

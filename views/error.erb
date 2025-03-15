@@ -1,3 +1,14 @@
-<h1>
-    Something went wrong!
-</h1>
+
+<head>
+    <link rel="stylesheet" href="/css/error.css?<%=Time.now.to_i%>">
+    <title>Error <%= status %></title>
+</head>
+
+
+<main>
+    <div class="error-box">
+        <h1>Error <%= status %></h1>
+        <p><%= message %></p>
+        <a href="<%= route %>">Try again</a>
+    </div>
+</main>

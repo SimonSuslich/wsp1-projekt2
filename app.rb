@@ -1,6 +1,7 @@
 require 'securerandom'
 require 'sinatra'
 require 'fileutils'
+require 'time'
 require_relative 'lib/product_helpers'
 require_relative 'lib/user_helpers'
 require_relative 'lib/admin_helpers'
@@ -41,40 +42,65 @@ class App < Sinatra::Base
 
     # ADMIN CRUD
 
+    before '/admin/*' do
+        pass if request.path_info == '/admin/log_in'
+        redirect '/admin/log_in' unless session[:admin_id]
+    end
+      
+      
+
     get '/admin/log_in' do 
         erb(:"admin/log_in")
     end
 
-    post '/admin/log_in' do 
-        admin_name_email = params['user_name_email']
-        cleartext_password = params['password'] 
 
+    FAILED_ATTEMPTS ||= {}  
+
+    post '/admin/log_in' do
+        ip = request.ip
+        FAILED_ATTEMPTS[ip] ||= { count: 0, last_attempt: nil }
+        
+        if FAILED_ATTEMPTS[ip][:last_attempt] && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] > 24*3600
+            FAILED_ATTEMPTS[ip] = { count: 0, last_attempt: nil }
+        end
+        
+        if FAILED_ATTEMPTS[ip][:count] >= 3
+            if FAILED_ATTEMPTS[ip][:last_attempt] && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] < 60
+                halt erb(:error, locals: { message: "Too many attempts. Try again later.", status: 429, route: "/admin/log_in" })
+            end
+        end
+    
+        admin_name_email = params['name_email']
+        cleartext_password = params['password'] 
+    
         admin = get_admin(admin_name_email)
     
         password_from_db = BCrypt::Password.new(admin['password'])
-
-        if password_from_db == cleartext_password 
-            session[:admin_id] = admin['id'] 
-            redirect("/admin")
+    
+        if password_from_db == cleartext_password
+            session[:admin_id] = admin['id']
+            FAILED_ATTEMPTS[ip] = { count: 0, last_attempt: nil }
+            redirect '/admin/dashboard'
         else
-            redirect("/error")
-        end 
+            FAILED_ATTEMPTS[ip][:count] += 1
+            p "count increased"
+            FAILED_ATTEMPTS[ip][:last_attempt] = Time.now
+            halt erb(:error, locals: { message: "Invalid credentials", status: 401, route: "/admin/log_in" })
+        end
     end
+    
 
-    get '/admin' do
-        admin_authenticated()
-        erb(:"admin/admin")
+    get '/admin/dashboard' do
+        erb(:"admin/dashboard")
     end
 
 
     get '/products/new' do 
-        admin_authenticated()
         erb(:"product/new")
     end
 
 
     post '/products' do 
-        admin_authenticated()
 
         # Access form fields
         title = params['title']
@@ -106,7 +132,6 @@ class App < Sinatra::Base
 
 
     get '/admin/products' do 
-        admin_authenticated()
         @all_products = admin_view_products()
 
         @all_products.each do |product|
@@ -118,7 +143,6 @@ class App < Sinatra::Base
 
 
     post "/products/:product_id/delete" do |product_id|
-        admin_authenticated()
 
         delete_product(product_id)
         remove_product_image_folder(product_id)
@@ -129,7 +153,6 @@ class App < Sinatra::Base
 
 
     get "/products/:id/edit" do |id|
-        admin_authenticated()
 
         @product = select_products_and_combine_images(id).first
 
@@ -138,7 +161,6 @@ class App < Sinatra::Base
     end
 
     post "/products/:id/update" do |id|
-        admin_authenticated()
 
         # Access form fields
         title = params['title']
@@ -202,30 +224,36 @@ class App < Sinatra::Base
         erb(:"log_in")
     end
 
+
+
+
     post '/log_in' do
+        ip = request.ip
+        FAILED_ATTEMPTS[ip] ||= { count: 0, last_attempt: nil }
+        
+        if FAILED_ATTEMPTS[ip][:last_attempt] && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] > 3600*24
+            FAILED_ATTEMPTS[ip] = { count: 0, last_attempt: nil }
+        end
+
+        if FAILED_ATTEMPTS[ip][:count] >= 1 && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] < 60
+          halt erb(:error, locals: { message: "Too many attempts. Try again later.", status: 429, route: "/log_in"})
+        end
+      
         user_name_email = params['user_name_email']
         cleartext_password = params['password'] 
-      
 
-        user = get_user_by_name(user_name_email)
-
-        if !user
-            user = get_user_by_email(user_name_email)
-        end
-
-        if !user
-            redirect("/error")
-        end
+        user = get_user(user_name_email)
       
         password_from_db = BCrypt::Password.new(user['password'])
 
         if password_from_db == cleartext_password 
-            session[:user_id] = user['id'] 
-            redirect("/")
+          session[:user_id] = user['id']
+          redirect '/'
         else
-            redirect("/error")
-
-        end 
+          FAILED_ATTEMPTS[ip][:count] += 1
+          FAILED_ATTEMPTS[ip][:last_attempt] = Time.now
+          halt erb(:error, locals: { message: "Invalid credentials", status: 401, route: "/log_in"})
+        end
     end
 
     get '/sign_up' do
@@ -233,33 +261,43 @@ class App < Sinatra::Base
     end
 
     post '/sign_up' do 
+        ip = request.ip
+        FAILED_ATTEMPTS[ip] ||= { count: 0, last_attempt: Time.now }
+    
+        if FAILED_ATTEMPTS[ip][:last_attempt] && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] > 3600 * 24
+            FAILED_ATTEMPTS[ip] = { count: 0, last_attempt: nil }
+        end
+
+        if FAILED_ATTEMPTS[ip][:count] >= 3 && Time.now - FAILED_ATTEMPTS[ip][:last_attempt] < 60
+            halt erb(:error, locals: { message: "Too many attempts. Try again later.", status: 429, route: "/sign_up" })
+        end
+    
         username = params['username']
         user_email = params['user_email']
         password = params['password']
         confirm_password = params['confirm_password']
 
-
-        check_username(username)
-
-
+        FAILED_ATTEMPTS[ip][:count] += 1
+        FAILED_ATTEMPTS[ip][:last_attempt] = Time.now
+    
+    
+        check_username_and_email(username, user_email)
+    
         if password != confirm_password
-            redirect("/error")
+
+            halt erb(:error, locals: { message: "Passwords do not match", status: 400, route: "/sign_up" })
         end
-
-
-        hashed_pasword = BCrypt::Password.create(password)
-
-        new_user([username, user_email, hashed_pasword])
-
+    
+        hashed_password = BCrypt::Password.create(password)
+        new_user([username, user_email, hashed_password])
+    
         user_id = db.last_insert_row_id
-        session[:user_id] = user_id 
+        session[:user_id] = user_id
 
 
-        redirect("/")
+        redirect '/'
     end
-
-
-
+    
     get '/log_out' do 
         session.destroy
         redirect("/")
@@ -268,8 +306,11 @@ class App < Sinatra::Base
 
     # CART CRUD
 
-    get '/cart' do 
+    before '/cart/*' do
+        redirect '/log_in' unless session[:user_id]
+    end
 
+    get '/cart' do 
         user_id = session[:user_id]
 
         @cart = get_cart_by_user(user_id)
@@ -287,9 +328,6 @@ class App < Sinatra::Base
     end
 
     post '/cart/:product_id/new' do |product_id|
-        user_authenticated()
-
-
         if !product_in_cart?(session[:user_id], product_id)
             redirect("/cart")
         end
@@ -307,6 +345,8 @@ class App < Sinatra::Base
 
 
     #SALES CRUD
+
+    #TO BE CONTINUED
 
 
 
