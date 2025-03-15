@@ -11,3 +11,7 @@ def admin_view_products
         ON products.id = product_images.product_id
     WHERE product_images.image_order = 0")
 end
+
+def authenticate_admin
+  redirect '/admin/log_in' unless session[:admin_id]
+end

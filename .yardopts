@@ -1,0 +1,5 @@
+--protected
+--private
+--tag route:Route
+--tag return:Returns
+--plugin yard-sinatra

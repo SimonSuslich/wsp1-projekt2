@@ -365,6 +365,15 @@ form select option {
     align-items: center;
 }
 
+a.link {
+    color: var(--text-color-1);
+    text-decoration: underline;
+    transition: 0.15s ease-in-out;
+}
+
+a.link:hover {
+    color: var(--text-color-2);
+}
 
 
 footer {
@@ -398,7 +407,7 @@ footer .contact {
     grid-area: contact;
 }
 
-footer ul {
+footer u l {
     list-style: none;
 }
 
